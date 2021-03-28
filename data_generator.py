@@ -16,12 +16,20 @@ class DataGenerator(Sequence):
 
         print(' [Task] Produces a problem distribution')
         data_loader = DataLoader(config)
-        self.city_list = data_loader.get_city_list()
-        self.problems = data_loader.get_problem()
+        city_info = data_loader.get_city_info()
+        self.city_list = city_info['list']
+        self.feature = {'x': city_info['feature_x'],
+                        'y': city_info['feature_y']}
+        self.problems_idx = data_loader.get_problem()
         print(' [Done] Problem distribution is ready')
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
-        return self.problems[idx]
+        problem_idx = self.problems_idx[idx]
+        city_list = self.city_list[problem_idx]
+        feature_x = self.feature['x'][problem_idx]
+        feature_y = self.feature['y'][problem_idx]
+
+        return city_list, feature_x, feature_y

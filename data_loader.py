@@ -17,18 +17,28 @@ class DataLoader():
             raise FileNotFoundError('[*Err] No such file: \'{}\''.format(self.path))
 
         print('  [Done] Successfully found city data')
-        self.table = self.table = pd.read_table(self.path,
-                                                header=None,
-                                                sep=' ')
+        self.df = pd.read_table(self.path,
+                                header=None,
+                                sep=' ')
+        self.df.columns = ['id', 'x', 'y']
+        self.df.sort_values(by=['id'], axis=0)
+        self.df.reset_index(drop=True)
         print('  [Done] Successfully Load city data')
-        self.table.columns = ['id', 'x', 'y']
-        self.city_count = len(self.table)
-        self.city_list = self.table['id'].to_numpy()
+
+        self.city_count = len(self.df)
+        self.city_list = self.df['id'].to_numpy()
 
         if config['data_config']['normalize']:
             self._preprocessing()
             print('  [Done] Preprocess city data')
 
+        feature_x = self.df['x'].to_numpy()
+        feature_y = self.df['y'].to_numpy()
+        self.city_info = {'list': self.city_list,
+                          'feature_x': feature_x,
+                          'feature_y': feature_y}
+
+        print('  [Task] Generate TSP problems')
         self.data_length = config['train_config']['max_episode'] \
                            + config['test_config']['max_episode']
         self.n_city = np.random.randint(low=self.min_city,
@@ -38,26 +48,27 @@ class DataLoader():
         print('  [Done] Generate TSP problems')
 
     @property
-    def get_city_list(self):
-        return self.city_list
-
-    @property
     def get_problem(self):
         return self.problem
 
+    @property
+    def get_city_info(self):
+        return self.city_info
+
     def _preprocessing(self):
-        x_val = self.table['x'].to_numpy(dtype=np.float32)
-        y_val = self.table['y'].to_numpy(dtype=np.float32)
+        x_val = self.df['x'].to_numpy(dtype=np.float32)
+        y_val = self.df['y'].to_numpy(dtype=np.float32)
 
         max_val = np.max((x_val, y_val))
 
         x_val = x_val / (max_val / 2.) - 1.
         y_val = y_val / (max_val / 2.) - 1.
 
-        self.table['x'], self.table['y'] = x_val, y_val
+        self.df['x'], self.df['y'] = x_val, y_val
 
     def _generate_city_problem(self):
-        problem = [np.random.choice(self.city_list, size=s, replace=False)
-                   for s in self.n_city]
+        idx = np.arange(self.city_count)
+        problems_idx = [np.sort(np.random.choice(idx, size=s, replace=False))
+                       for s in self.n_city]
 
-        return problem
+        return problems_idx
