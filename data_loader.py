@@ -9,16 +9,18 @@ class DataLoader(object):
     def __init__(self, config):
         self.config = config
 
-        self.feature_keys = config['data_config']['key']
-        self.sort_value = config['data_config']['sort_value']
-        self.path = config['data_config']['path']
-        self.min_city = config['data_config']['min_city']
-        self.max_city = config['data_config']['max_city']
+        self.feature_keys = config['data_params']['key']
+        self.sort_value = config['data_params']['sort_value']
+        self.path = config['data_params']['path']
+        self.min_city = config['data_params']['min_city']
+        self.max_city = config['data_params']['max_city']
+        self.data_length = config['train_params']['max_episode'] +\
+                           config['test_params']['max_episode']
 
         if not os.path.exists(self.path):
             raise FileNotFoundError('[*Err] No such file: \'{}\''.format(self.path))
 
-        print('  [Done] Successfully found city data')
+        print(' [Done] Successfully found city data')
         self.df = pd.read_table(self.path,
                                 header=None,
                                 sep=' ')
@@ -27,14 +29,14 @@ class DataLoader(object):
         self.df.columns = self.feature_keys
         self.df.sort_values(by=[self.sort_value], axis=0)
         self.df.reset_index(drop=True)
-        print('  [Done] Successfully Load city data')
+        print(' [Done] Successfully Load city data')
 
         self.city_count = len(self.df)
         self.city_list = self.df['id'].to_numpy()
 
         if config['data_config']['normalize']:
             self._preprocessing()
-            print('  [Done] Preprocess city data')
+            print(' [Done] Preprocess city data')
 
         self.feature = {}
         for k in self.feature_keys:
@@ -44,14 +46,12 @@ class DataLoader(object):
         self.city_info = {'list': self.city_list,
                           'feature': self.feature}
 
-        print('  [Task] Generate TSP problems')
-        self.data_length = config['train_config']['max_episode'] \
-                           + config['test_config']['max_episode']
+        print(' [Task] Generate TSP problems')
         self.n_city = np.random.randint(low=self.min_city,
                                         high=self.max_city + 1,
                                         size=self.data_length)
         self.problem = self._generate_city_problem()
-        print('  [Done] Generate TSP problems')
+        print(' [Done] Generate TSP problems')
 
     @property
     def get_problem(self):

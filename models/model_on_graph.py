@@ -13,10 +13,9 @@ class ModelOnGraph(Model):
 
         self.config = config
 
-        self.t = config['model_param']['t']
-        self.p = config['model_param']['p']
-        self.lr = config['model_param']['lr']
-        self.feature_key = config['data_config']['key']
+        self.t = config['model_params']['t']
+        self.p = config['model_params']['p']
+        self.lr = config['model_params']['lr']
         
         self.G, self.node_list, self.adj, self.feature = None, None, None, None
 

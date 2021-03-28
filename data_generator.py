@@ -13,16 +13,16 @@ import ops
 
 class DataGenerator(Sequence):
 
-    def __init__(self, config):
+    def __init__(self, config, data_loader):
         self.config = config
+        self.data_loader = data_loader
 
-        self.feature_keys = config['data_config']['key']
-        self.length = config['train_config']['max_episode'] + config['test_config']['max_episode']
+        self.feature_keys = config['data_params']['key']
+        self.length = config['train_params']['max_episode'] +\
+                      config['test_params']['max_episode']
 
         print(' [Task] Produces a problem distribution')
-        data_loader = DataLoader(config)
         city_info = data_loader.get_city_info()
-        self.city_list = city_info['list']
         self.feature = ops.concatenate_features(city_info['feature'],
                                                 self.feature_keys)
         self.problems_idx = data_loader.get_problem()
@@ -33,9 +33,9 @@ class DataGenerator(Sequence):
 
     def __getitem__(self, idx):
         problem_idx = self.problems_idx[idx]
-        city_list = self.city_list[problem_idx]
+        n_city = len(problem_idx)
         feature = self.feature[problem_idx]
 
-        G = Instance(self.config, city_list, feature)
+        G = Instance(n_city, feature)
 
-        return G, city_list
+        return G

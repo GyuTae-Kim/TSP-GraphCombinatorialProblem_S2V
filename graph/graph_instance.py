@@ -5,22 +5,22 @@ import graph.ops as ops
 
 class Instance(object):
 
-    def __init__(self, config, node_list, feature):
-        if not (node_list.shape[0] == feature.shape[0]):
+    def __init__(self, n_city, feature):
+        if not (n_city == feature.shape[0]):
             raise ValueError('   [Err] Parameters\' length are not match.'
-                             'city_list: {}, feature: {}'.format(node_list.shape,
+                             'city_list: {}, feature: {}'.format(n_city,
                                                                  feature.shape))
 
-        self.config = config
-        self.node_list = node_list
+        self.n_city = n_city
         self.feature = feature
 
-        self.node_count = len(node_list)
-        self.A = ops.gen_adjacency_matrix(self.node_count)
-        self.x = ops.gen_init_x(self.node_count)
+        self.node_list = np.arange(n_city)
+        self.A = ops.gen_adjacency_matrix(n_city)
+        self.x = ops.gen_init_x(n_city)
+        self.cost_func = ops.euclidean_distance
 
-        self.current_node = node_list[0]
-        self.available_node = ops.calculate_available_node(node_list,
+        self.current_node = 0
+        self.available_node = ops.calculate_available_node(self.node_list,
                                                            self.x)
 
         self.total_cost = 0.
