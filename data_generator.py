@@ -6,6 +6,8 @@ from tensorflow.keras.utils import Sequence
 
 from data_loader import DataLoader
 
+from graph.graph_instance import Instance
+
 
 class DataGenerator(Sequence):
 
@@ -32,4 +34,6 @@ class DataGenerator(Sequence):
         feature_x = self.feature['x'][problem_idx]
         feature_y = self.feature['y'][problem_idx]
 
-        return city_list, feature_x, feature_y
+        G = Instance(city_list, feature_x, feature_y)
+
+        return G, city_list

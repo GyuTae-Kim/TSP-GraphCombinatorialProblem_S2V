@@ -36,6 +36,10 @@ def calculate_x(x, next_node):
     x[next_node] = 1.
     return x
 
+def euclidean_distance(x1, y1, x2, y2):
+    dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return dist
+
 def check_done(x):
     if 0. in x:
         return False

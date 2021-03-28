@@ -5,7 +5,7 @@ import graph.ops as ops
 
 class Instance(object):
 
-    def __init__(self, node_list, feature_x, feature_y, weight=None, connected_all=True):
+    def __init__(self, node_list, feature_x, feature_y):
         if not (node_list.shape == feature_x.shape == feature_y.shape):
             raise ValueError('   [Err] Parameters\' shape are not match.'
                              'city_list: {}, feature_x: {}, feature_y'.format(node_list.shape,
@@ -15,21 +15,14 @@ class Instance(object):
         self.node_list = node_list
         self.feature_x = feature_x
         self.feature_y = feature_y
-        self.weight = weight
-        self.connected_all = connected_all
 
         self.node_count = len(node_list)
         self.A = ops.gen_adjacency_matrix(self.node_count)
         self.x = ops.gen_init_x(self.node_count)
 
-        if weight is None:
-            self.w = self.A
-
         self.current_node = node_list[0]
         self.available_node = ops.calculate_available_node(node_list,
-                                                           self.x,
-                                                           connected_all=connected_all,
-                                                           A=self.A[self.current_node])
+                                                           self.x)
 
         self.total_cost = 0.
         self.step_count = 0
@@ -42,7 +35,10 @@ class Instance(object):
                                                        next_node))
         
         self.x = ops.calculate_x(self.x, next_node)
-        cost = self.w[self.current_node][next_node]
+        cost = ops.euclidean_distance(self.feature_x[self.current_node],
+                                      self.feature_y[self.current_node],
+                                      self.feature_x[next_node],
+                                      self.feature_y[next_node])
         self.total_cost += cost
         done = ops.check_done(self.x)
 
@@ -50,9 +46,7 @@ class Instance(object):
         self.step_count += 1
         self.path.append(self.current_node)
         self.available_node = ops.calculate_available_node(self.node_list,
-                                                           self.x,
-                                                           connected_all=self.connected_all,
-                                                           A=self.A[self.current_node])
+                                                           self.x)
         if len(self.available_node) == 0:
             done = True
         
