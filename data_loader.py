@@ -4,7 +4,7 @@ import pandas as pd
 import os
 
 
-class DataLoader():
+class DataLoader(object):
 
     def __init__(self, config):
         self.config = config
