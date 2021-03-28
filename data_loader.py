@@ -9,6 +9,8 @@ class DataLoader(object):
     def __init__(self, config):
         self.config = config
 
+        self.feature_keys = config['data_config']['key']
+        self.sort_value = config['data_config']['sort_value']
         self.path = config['data_config']['path']
         self.min_city = config['data_config']['min_city']
         self.max_city = config['data_config']['max_city']
@@ -20,8 +22,10 @@ class DataLoader(object):
         self.df = pd.read_table(self.path,
                                 header=None,
                                 sep=' ')
-        self.df.columns = ['id', 'x', 'y']
-        self.df.sort_values(by=['id'], axis=0)
+        if len(self.df.columns) != len(self.feature_keys) + 1:
+            raise ValueError('   [Err] Sort value\'s length must be {}'.format(len(self.df.columns) - 1))
+        self.df.columns = self.feature_keys
+        self.df.sort_values(by=[self.sort_value], axis=0)
         self.df.reset_index(drop=True)
         print('  [Done] Successfully Load city data')
 
@@ -32,11 +36,13 @@ class DataLoader(object):
             self._preprocessing()
             print('  [Done] Preprocess city data')
 
-        feature_x = self.df['x'].to_numpy()
-        feature_y = self.df['y'].to_numpy()
+        self.feature = {}
+        for k in self.feature_keys:
+            self.feature[k] = np.reshape(self.df[k].to_numpy(),
+                                         (-1, 1))
+        
         self.city_info = {'list': self.city_list,
-                          'feature_x': feature_x,
-                          'feature_y': feature_y}
+                          'feature': self.feature}
 
         print('  [Task] Generate TSP problems')
         self.data_length = config['train_config']['max_episode'] \
@@ -55,6 +61,7 @@ class DataLoader(object):
     def get_city_info(self):
         return self.city_info
 
+    ##### If you want to use custom data, fix this part #####
     def _preprocessing(self):
         x_val = self.df['x'].to_numpy(dtype=np.float32)
         y_val = self.df['y'].to_numpy(dtype=np.float32)
@@ -65,6 +72,7 @@ class DataLoader(object):
         y_val = y_val / (max_val / 2.) - 1.
 
         self.df['x'], self.df['y'] = x_val, y_val
+    ##########################################################
 
     def _generate_city_problem(self):
         idx = np.arange(self.city_count)

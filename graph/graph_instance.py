@@ -5,16 +5,15 @@ import graph.ops as ops
 
 class Instance(object):
 
-    def __init__(self, node_list, feature_x, feature_y):
-        if not (node_list.shape == feature_x.shape == feature_y.shape):
-            raise ValueError('   [Err] Parameters\' shape are not match.'
-                             'city_list: {}, feature_x: {}, feature_y'.format(node_list.shape,
-                                                                              feature_x.shape,
-                                                                              feature_y.shape))
+    def __init__(self, config, node_list, feature):
+        if not (node_list.shape[0] == feature.shape[0]):
+            raise ValueError('   [Err] Parameters\' length are not match.'
+                             'city_list: {}, feature: {}'.format(node_list.shape,
+                                                                 feature.shape))
 
+        self.config = config
         self.node_list = node_list
-        self.feature_x = feature_x
-        self.feature_y = feature_y
+        self.feature = feature
 
         self.node_count = len(node_list)
         self.A = ops.gen_adjacency_matrix(self.node_count)
@@ -28,6 +27,13 @@ class Instance(object):
         self.step_count = 0
         self.path = [self.current_node]
 
+    def instance_info(self):
+        info = {'node_list': self.node_list,
+                'adj': self.A,
+                'feature': self.feature}
+        
+        return info
+
     def move(self, next_node):
         if next_node not in self.available_node:
             raise ValueError('   [Err] Unable to move to that node.'
@@ -35,10 +41,8 @@ class Instance(object):
                                                        next_node))
         
         self.x = ops.calculate_x(self.x, next_node)
-        cost = ops.euclidean_distance(self.feature_x[self.current_node],
-                                      self.feature_y[self.current_node],
-                                      self.feature_x[next_node],
-                                      self.feature_y[next_node])
+        cost = ops.euclidean_distance(self.feature[self.current_node],
+                                      self.feature[next_node])
         self.total_cost += cost
         done = ops.check_done(self.x)
 
@@ -52,6 +56,9 @@ class Instance(object):
         
         return self.x, cost, done
 
+    def calculate_weights(self):
+        return ops.calculate_weights(self.current_node, self.feature)
+    
     @property
     def get_path(self):
         return self.path
@@ -59,11 +66,7 @@ class Instance(object):
     @property
     def get_total_cost(self):
         return self.total_cost
-    
+
     @property
-    def get_adjecency_matrix(self):
-        return self.A
-    
-    @property
-    def get_weight(self):
-        return self.w
+    def get_feature(self):
+        return self.feature

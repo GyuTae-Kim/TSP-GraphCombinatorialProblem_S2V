@@ -9,8 +9,8 @@ def calculate_available_node(node_list, x, connected_all=True, A=None):
             raise ValueError('    [Err] If connected_all == False, adjency matrix and current node must not be None')
         if len(A.shape) != 1:
             raise ValueError('    [Err] Adjency matrix rank must be 1.')
-        func_cal = np.vectorize(_vec_caculate_with_adjacency)
-        mask = func_cal(node_idx, A)
+        vec_cal = np.vectorize(_vec_caculate_with_adjacency)
+        mask = vec_cal(node_idx, A)
         node_idx = node_idx[mask]
     
     node = node_list[node_idx]
@@ -36,12 +36,19 @@ def calculate_x(x, next_node):
     x[next_node] = 1.
     return x
 
-def euclidean_distance(x1, y1, x2, y2):
-    dist = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+##### If you want to use custom data, fix this part #####
+def euclidean_distance(p1, p2):
+    dist = np.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p1[1]) ** 2)
     return dist
+#########################################################
 
 def check_done(x):
     if 0. in x:
         return False
     else:
         return True
+
+def calculate_weights(node, feature):
+    vec_calc_dist = np.vectorize(euclidean_distance)
+    weights = vec_calc_dist(feature[node], feature)
+    return weights
