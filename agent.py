@@ -1,5 +1,7 @@
 import numpy as np
 
+import os
+
 import ops
 
 
@@ -15,7 +17,12 @@ class Agent(object):
         self.update_freq = config['train_params']['update_freq']
         self.train_epoch = config['train_params']['train_epoch']
         self.discount = config['train_params']['discount']
+        self.save_path = config['train_params']['save_path']
+        self.save_freq = config['train_params']['save_eq']
         self.test_eps = config['test_params']['max_episode']
+
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
 
         self.avg_loss = []
         
@@ -43,6 +50,9 @@ class Agent(object):
                 print(' [Done] Ep: {}/{}, Update Model. Loss: {}'.format(e,
                                                                          self.train_eps,
                                                                          loss))
+            if e % self.save_freq == 0 and e != 0:
+                self.save_model_weight()
+                print(' [Done] Save model')
 
     def get_Q_value(self, moveable_node):
         mu = self.model_on_graph.embedding()
@@ -72,3 +82,6 @@ class Agent(object):
                 loss.append(self.model_on_graph.update([a], x, adj, w, f, Q))
         
         return np.mean(loss)
+
+    def save_model_weight(self):
+        self.model_on_graph.save_weights(self.save_path)
