@@ -24,3 +24,8 @@ python main.py --config=configs.yaml
 ```
 python main.py --config=configs.yaml --test_only
 ```
+
+## Reference
+```
+https://papers.nips.cc/paper/2017/file/d9896106ca98d3d05b8cbdf4fd8b13a1-Paper.pdf
+```
