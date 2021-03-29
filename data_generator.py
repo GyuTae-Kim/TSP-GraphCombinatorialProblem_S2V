@@ -21,7 +21,7 @@ class DataGenerator(Sequence):
         self.length = config['train_params']['max_episode'] +\
                       config['test_params']['max_episode']
 
-        print(' [Task] Produces a problem distribution')
+        print(' [Task] Produces problem distribution')
         city_info = data_loader.get_city_info()
         self.feature = ops.concatenate_features(city_info['feature'],
                                                 self.feature_keys)

@@ -2,10 +2,13 @@ import numpy as np
 
 
 def concatenate_features(feature, keys):
-    concat = np.empty((0, 1), dtype=np.float32)
+    concat = None
     for k in feature.keys():
-        x = np.reshape(feature['k'] (-1, 1))
-        concat = np.concatenate([concat, x])
+        x = np.reshape(feature[k], (-1, 1))
+        if concat is None:
+            concat = x
+        else:
+            concat = np.concatenate([concat, x], axis=1)
 
     return concat
 

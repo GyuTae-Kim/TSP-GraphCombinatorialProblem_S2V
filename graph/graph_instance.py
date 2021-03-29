@@ -23,7 +23,7 @@ class Instance(object):
         self.available_node = ops.calculate_available_node(self.node_list,
                                                            self.x)
         self.weight = ops.calculate_weights(self.current_node,
-                                                    self.feature)
+                                            self.feature)
         self.total_cost = 0.
         self.step_count = 0
         self.path = [self.current_node]
@@ -62,26 +62,20 @@ class Instance(object):
     def __len__(self):
         return self.n_city
     
-    @property
     def get_weight(self):
         return self.weight
 
-    @property
     def get_available_node(self):
         return self.available_node
     
-    @property
     def get_x(self):
         return self.x
 
-    @property
     def get_path(self):
         return self.path
 
-    @property
     def get_total_cost(self):
         return self.total_cost
 
-    @property
     def get_feature(self):
         return self.feature

@@ -30,7 +30,7 @@ class GraphHandler(object):
         fail = False
 
         if self.data_idx < self.train_eps - 1:
-            self.mem.append(x, a, r, done, w)
+            self.mem.append(x, a, r, done, w, self.G.get_feature())
 
         if done:
             if 0. in x:
@@ -44,7 +44,7 @@ class GraphHandler(object):
     def generate_graph_instance(self):
         self.data_idx += 1
 
-        if self.data_idx >= self.total_ep:
+        if self.data_idx >= self.total_eps:
             raise IndexError('  [Err] The maximum index of the data generator has been exceeded.')
         
         self.G = self.data_gen[self.data_idx]
@@ -52,11 +52,11 @@ class GraphHandler(object):
         self.cur_step = 0
         self.cur_pos = 0
 
-        return self.G, len(self.G)
+        return self.G
 
     def moveable_node(self):
         return self.G.get_available_node()
-
+    
     def _calculate_cost_tsp(self, to_node):
         sum = -self.G.get_total_cost()
         cost = sum - self.G.cost_func(self.feature[0], self.feature[to_node])

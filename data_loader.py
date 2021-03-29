@@ -26,15 +26,15 @@ class DataLoader(object):
                                 sep=' ')
         if len(self.df.columns) != len(self.feature_keys) + 1:
             raise ValueError('   [Err] Sort value\'s length must be {}'.format(len(self.df.columns) - 1))
-        self.df.columns = [self.sort_value] + self.feature_keys
-        self.df.sort_values(by=[self.sort_value], axis=0)
+        self.df.columns = self.sort_value + self.feature_keys
+        self.df.sort_values(by=self.sort_value, axis=0)
         self.df.reset_index(drop=True)
         print(' [Done] Successfully Load city data')
 
         self.city_count = len(self.df)
         self.city_list = self.df['id'].to_numpy()
 
-        if config['data_config']['normalize']:
+        if config['data_params']['normalize']:
             self._preprocessing()
             print(' [Done] Preprocess city data')
 
@@ -53,11 +53,9 @@ class DataLoader(object):
         self.problem = self._generate_city_problem()
         print(' [Done] Generate TSP problems')
 
-    @property
     def get_problem(self):
         return self.problem
 
-    @property
     def get_city_info(self):
         return self.city_info
 

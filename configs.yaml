@@ -4,6 +4,7 @@ data_params:
   path: './data/tsp_data.txt'
   min_city: 50
   max_city: 500
+  normalize: True
 
 train_params:
   batch_size: 20
@@ -14,6 +15,7 @@ train_params:
   train_epoch: 5
   discount: 0.99
   save_path: './models/logs'
+  save_freq: 1000
 
 test_params:
   max_episode: 50

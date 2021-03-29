@@ -9,9 +9,12 @@ from models.model_on_graph import ModelOnGraph
 from agent import Agent
 
 
-def compute_config(config):
+def compute_config(config, args):
     keys = config['data_params']['key']
     config['model_params']['p'] = len(keys)
+
+    if args.test_only:
+        config['train_params']['max_episode'] = 0
 
 
 if __name__ == "__main__":
@@ -21,8 +24,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with open(args.config) as f:
-        config = yaml.load(f)
-    compute_config(config)
+        config = yaml.load(f, Loader=yaml.FullLoader)
+    compute_config(config, args)
 
     print('[Task] Load Data Loader')
     data_loader = DataLoader(config)

@@ -36,23 +36,27 @@ class ModelOnGraph(Model):
         print(' [Done] Checking')
 
     def import_instance(self, G):
+        if G is None:
+            ValueError('  [Err] Graph instance couldn\'t be None Value.')
+
         self.G = G
         instance = G.instance_info()
         self.node_list = instance['node_list']
-        self.adj = tf.convert_to_tensor(instance['adj'],
-                                        dtype=tf.float32)
+        self.adj = instance['adj']
         self.feature = self.G.get_feature()
 
-    def embedding(self, x=None, adj=None, w=None, mu=None):
-        assert self.G is None, '  [Err] Import instance first.'
-
+    def embedding(self, x=None, mu=None, w=None, adj=None):
         if x is None:
+            # assert self.G is None, '  [Err] Import instance first.'
             x = self.G.get_x()
         if adj is None:
+            # assert self.G is None, '  [Err] Import instance first.'
             adj = self.adj
         if w is None:
+            # assert self.G is None, '  [Err] Import instance first.'
             w = self.G.get_weight()
         if mu is None:
+            # assert self.G is None, '  [Err] Import instance first.'
             mu = self.feature
 
         x = tf.convert_to_tensor(x,
@@ -65,7 +69,7 @@ class ModelOnGraph(Model):
                                   dtype=tf.float32)
 
         for t in range(self.t):
-            mu = self.s2v(x, mu, self.adj, w)
+            mu = self.s2v(x, mu, w, adj)
 
         return mu
 
@@ -79,15 +83,15 @@ class ModelOnGraph(Model):
 
         return Q
 
-    def call(self, idx, x, adj, weight, mu):
-        emb_mu = self.embedding(x, adj, weight, mu)
+    def call(self, idx, x, mu, w, adj):
+        emb_mu = self.embedding(x, mu, w, adj)
         Q = self.evaluate(idx, emb_mu)
 
         return Q
 
     def update(self, idx, x, adj, weight, mu, opt_Q):
         with tf.GradientTape() as tape:
-            Q = self.__call__(idx, x, adj, weight, mu)
+            Q = self.__call__(idx, x, mu, weight, adj)
             loss = losses.mean_squared_error(opt_Q, Q)
         grads = tape.gradient(loss, self.trainable_weights)
         self.opt.apply_gradients(zip(grads, self.trainable_weights))
@@ -100,5 +104,10 @@ class ModelOnGraph(Model):
             return
         
         latest = tf.train.latest_checkpoint(self.save_path)
+
+        if latest is None:
+            print('  [Done] Couldn\'t find checkpoint')
+            return
+        
         self.load_weights(latest)
         print('  [Done] Load Checkpoint')

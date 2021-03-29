@@ -2,7 +2,8 @@ import numpy as np
 
 
 def calculate_available_node(node_list, x, connected_all=True, A=None):
-    node_idx = np.where(x==0)[0]
+    _x = np.squeeze(x, axis=-1)
+    node_idx = np.where(_x==0)[0]
 
     if not connected_all:
         if A is None:
@@ -24,8 +25,8 @@ def _vec_caculate_with_adjacency(node, A):
         return False
 
 def gen_init_x(node_count):
-    x = np.zeros(node_count)
-    x[0] = 1.
+    x = np.zeros((node_count, 1))
+    x[0, 0] = 1.
     return x
 
 def gen_adjacency_matrix(node_count):
@@ -33,7 +34,7 @@ def gen_adjacency_matrix(node_count):
     return A
 
 def calculate_x(x, next_node):
-    x[next_node] = 1.
+    x[next_node, 0] = 1.
     return x
 
 ##### If you want to use custom data, fix this part #####
@@ -49,6 +50,10 @@ def check_done(x):
         return True
 
 def calculate_weights(node, feature):
-    vec_calc_dist = np.vectorize(euclidean_distance)
-    weights = vec_calc_dist(feature[node], feature)
+    p1_x = feature[node, :1]
+    p1_y = feature[node, 0:]
+    p2_x = feature[:, :1]
+    p2_y = feature[:, 0:]
+    weights = np.sqrt((p1_x - p2_x) ** 2 + (p1_y - p2_y) ** 2)[0]
+
     return weights

@@ -18,7 +18,7 @@ class Agent(object):
         self.train_epoch = config['train_params']['train_epoch']
         self.discount = config['train_params']['discount']
         self.save_path = config['train_params']['save_path']
-        self.save_freq = config['train_params']['save_eq']
+        self.save_freq = config['train_params']['save_freq']
         self.test_eps = config['test_params']['max_episode']
 
         if not os.path.exists(self.save_path):
@@ -26,12 +26,16 @@ class Agent(object):
         self.checkpoint_format = os.path.join(self.save_path, 'model-{epoch:04d}.ckpt')
 
         self.avg_loss = []
+
+    def running(self):
+        self.run_train()
+        self.run_test()
         
     def run_train(self):
-        for e in range(self.train_eps):
-            G, node_count = self.graph_handler.generate_graph_instance()
+        for ep in range(self.train_eps):
+            G = self.graph_handler.generate_graph_instance()
             self.model_on_graph.import_instance(G)
-            e = 1. / ((e / 10) + 1)
+            e = 1. / ((ep / 10) + 1)
             done = False
             n_visit = 1
 
@@ -43,17 +47,34 @@ class Agent(object):
                     Q = self.get_Q_value(moveable_node)
                     a = moveable_node[np.argmax(Q)]
 
+                done, fail = self.graph_handler.move_node(a)
+                n_visit += 1
+
+            if e % self.update_freq == 0 and ep != 0:
+                loss = self.update_model()
+                print(' [Done] Ep: {}/{}, Update Model. Loss: {} / fail: {}'.format(ep,
+                                                                             self.train_eps,
+                                                                             loss,
+                                                                             fail))
+            if e % self.save_freq == 0 and ep != 0:
+                self.save_model_weight()
+                print(' [Done] Save model')
+
+    def run_test(self):
+        for e in range(self.test_eps):
+            G = self.graph_handler.generate_graph_instance()
+            self.model_on_graph.import_instance(G)
+            done = False
+            n_visit = 1
+
+            while not done:
+                moveable_node = self.graph_handler.moveable_node()
+                Q = self.get_Q_value(moveable_node)
+                a = moveable_node[np.argmax(Q)]
                 self.graph_handler.move_node(a)
                 n_visit += 1
 
-            if e % self.update_freq == 0 and e != 0:
-                loss = self.update_model()
-                print(' [Done] Ep: {}/{}, Update Model. Loss: {}'.format(e,
-                                                                         self.train_eps,
-                                                                         loss))
-            if e % self.save_freq == 0 and e != 0:
-                self.save_model_weight()
-                print(' [Done] Save model')
+            print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, G.total_cost))
 
     def get_Q_value(self, moveable_node):
         mu = self.model_on_graph.embedding()
@@ -77,9 +98,9 @@ class Agent(object):
                     next_x = x.copy(); next_x[a] = 1.
                     Q[0, 0] = r + self.discount * np.max(self.model_on_graph(ops.calculate_available_node(next_x),
                                                                              next_x,
-                                                                             adj,
+                                                                             f,
                                                                              w,
-                                                                             f))
+                                                                             adj))
                 loss.append(self.model_on_graph.update([a], x, adj, w, f, Q))
         
         return np.mean(loss)
