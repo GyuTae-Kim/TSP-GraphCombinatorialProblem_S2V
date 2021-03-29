@@ -1,0 +1,23 @@
+data_params:
+  key: ['x', 'y']
+  sort_value: ['id']
+  path: './data/tsp_data.txt'
+  min_city: 50
+  max_city: 500
+
+train_params:
+  batch_size: 20
+  memory_size: 1000
+  max_episode: 10000
+  memory_saving_mode: False
+  update_freq: 10
+  train_epoch: 5
+  discount: 0.99
+  save_path: './models/logs'
+
+test_params:
+  max_episode: 50
+
+model_params:
+  t: 4
+  lr: 1e-3

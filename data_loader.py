@@ -26,7 +26,7 @@ class DataLoader(object):
                                 sep=' ')
         if len(self.df.columns) != len(self.feature_keys) + 1:
             raise ValueError('   [Err] Sort value\'s length must be {}'.format(len(self.df.columns) - 1))
-        self.df.columns = self.feature_keys
+        self.df.columns = [self.sort_value] + self.feature_keys
         self.df.sort_values(by=[self.sort_value], axis=0)
         self.df.reset_index(drop=True)
         print(' [Done] Successfully Load city data')
