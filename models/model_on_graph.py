@@ -4,6 +4,8 @@ from tensorflow.keras import Model, optimizers, losses
 
 from models.model_base import Structure2Vec, Evaluation
 
+import os
+
 import models.ops as ops
 
 
@@ -17,6 +19,7 @@ class ModelOnGraph(Model):
         self.t = config['model_params']['t']
         self.p = config['model_params']['p']
         self.lr = config['model_params']['lr']
+        self.save_path = config['train_params']['save_path']
         
         self.G, self.node_list, self.adj, self.feature = None, None, None, None
 
@@ -27,6 +30,10 @@ class ModelOnGraph(Model):
         self.ev = Evaluation(self.p)
         print(' [Done] Successfully Loadded Evaluation(Q)')
         self.opt = optimizers.Adam(self.lr)
+
+        print(' [Task] Check Checkpoint')
+        self._check_checkpoint()
+        print(' [Done] Checking')
 
     def import_instance(self, G):
         self.G = G
@@ -86,3 +93,12 @@ class ModelOnGraph(Model):
         self.opt.apply_gradients(zip(grads, self.trainable_weights))
 
         return loss
+
+    def _check_checkpoint(self):
+        if not os.path.exists(self.save_path):
+            print('  [Done] Couldn\'t find checkpoint')
+            return
+        
+        latest = tf.train.latest_checkpoint(self.save_path)
+        self.load_weights(latest)
+        print('  [Done] Load Checkpoint')

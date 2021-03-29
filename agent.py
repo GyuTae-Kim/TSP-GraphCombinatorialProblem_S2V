@@ -23,6 +23,7 @@ class Agent(object):
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
+        self.checkpoint_format = os.path.join(self.save_path, 'model-{epoch:04d}.ckpt')
 
         self.avg_loss = []
         
@@ -84,4 +85,4 @@ class Agent(object):
         return np.mean(loss)
 
     def save_model_weight(self):
-        self.model_on_graph.save_weights(self.save_path)
+        self.model_on_graph.save_weights(self.checkpoint_format)
