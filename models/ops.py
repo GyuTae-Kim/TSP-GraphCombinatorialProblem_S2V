@@ -3,7 +3,7 @@ import tensorflow as tf
 
 
 def specific_value(mu, idx, length):
-    h = np.zeros(length)
+    h = np.zeros((len(idx), length))
     h[idx] = 1.
     h = tf.convert_to_tensor(h,
                              dtype=tf.float32)

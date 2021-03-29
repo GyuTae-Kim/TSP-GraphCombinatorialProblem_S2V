@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model, optimizers, losses
 
@@ -35,20 +36,27 @@ class ModelOnGraph(Model):
                                         dtype=tf.float32)
         self.feature = self.G.get_feature()
 
-    def embedding(self, x, adj=None, w=None):
+    def embedding(self, x=None, adj=None, w=None, mu=None):
         assert self.G is None, '  [Err] Import instance first.'
 
+        if x is None:
+            x = self.G.get_x()
         if adj is None:
             adj = self.adj
         if w is None:
-            w = self.G.calculate_weights()
+            w = self.G.get_weight()
+        if mu is None:
+            mu = self.feature
 
         x = tf.convert_to_tensor(x,
                                  dtype=tf.float32)
-        mu = tf.convert_to_tensor(self.feature,
-                                  dtype=tf.float32)
+        adj = tf.convert_to_tensor(adj,
+                                   dtype=tf.float32)
         w = tf.convert_to_tensor(w,
                                  dtype=tf.float32)
+        mu = tf.convert_to_tensor(mu,
+                                  dtype=tf.float32)
+
         for t in range(self.t):
             mu = self.s2v(x, mu, self.adj, w)
 
@@ -56,20 +64,23 @@ class ModelOnGraph(Model):
 
     def evaluate(self, idx, mu):
         sum_mu = tf.reduce_mean(mu, axis=0, keepdims=True)
+        brod = tf.convert_to_tensor(np.ones((len(idx), 1)),
+                                    dtype=tf.float32)
+        sum_mu = sum_mu * brod
         node_mu = ops.specific_value(mu, idx)
         Q = self.ev(sum_mu, node_mu)
 
         return Q
 
-    def call(self, idx, x, adj=None, weight=None):
-        mu = self.embedding(x, adj, weight)
-        Q = self.evaluate(idx, mu)
+    def call(self, idx, x, adj, weight, mu):
+        emb_mu = self.embedding(x, adj, weight, mu)
+        Q = self.evaluate(idx, emb_mu)
 
         return Q
 
-    def update(self, idx, x, adj, weight, opt_Q):
+    def update(self, idx, x, adj, weight, mu, opt_Q):
         with tf.GradientTape() as tape:
-            Q = self.__call__(idx, x, adj, weight)
+            Q = self.__call__(idx, x, adj, weight, mu)
             loss = losses.mean_squared_error(opt_Q, Q)
         grads = tape.gradient(loss, self.trainable_weights)
         self.opt.apply_gradients(zip(grads, self.trainable_weights))

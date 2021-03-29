@@ -22,19 +22,26 @@ class GraphHandler(object):
         
         self.mem = Mem(self.memory_size, self.batch_size)
         self.G, self.feature = None, None
-        self._generate_graph_instance()
 
-    def move_node(self, a, w):
+    def move_node(self, a):
         x, _, done = self.G.move(a)
+        w = self.G.get_weight()
         r = self._calculate_cost_tsp(a)
+        fail = False
 
         if self.data_idx < self.train_eps - 1:
             self.mem.append(x, a, r, done, w)
 
+        if done:
+            if 0. in x:
+                fail = True
+
+        return done, fail
+
     def genenrate_train_sample(self):
         return self.mem.sample()
 
-    def _generate_graph_instance(self):
+    def generate_graph_instance(self):
         self.data_idx += 1
 
         if self.data_idx >= self.total_ep:
@@ -44,6 +51,11 @@ class GraphHandler(object):
         self.feature = self.G.get_feature()
         self.cur_step = 0
         self.cur_pos = 0
+
+        return self.G, len(self.G)
+
+    def moveable_node(self):
+        return self.G.get_available_node()
 
     def _calculate_cost_tsp(self, to_node):
         sum = -self.G.get_total_cost()
