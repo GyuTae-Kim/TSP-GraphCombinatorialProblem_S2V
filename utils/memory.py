@@ -12,13 +12,15 @@ class Memory(object):
         self.r = []
         self.done = []
         self.w = []
+        self.f = []
     
-    def append(self, x, a, r, done, w):
+    def append(self, x, a, r, done, w, f):
         self.x.append(x)
         self.a.append(a)
         self.r.append(r)
         self.done.append(done)
         self.w.append(w)
+        self.f.append(f)
 
         if len(self.x) > self.memory_size:
             self.x.pop(0)
@@ -26,6 +28,7 @@ class Memory(object):
             self.r.pop(0)
             self.done.pop(0)
             self.w.pop(0)
+            self.f.pop(0)
 
     def clear(self):
         self.x.clear()
@@ -33,6 +36,7 @@ class Memory(object):
         self.r.clear()
         self.done.clear()
         self.w.clear()
+        self.f.clear()
 
     def sample(self, batch_size):
         assert batch_size < len(self.x), '   [err] Data is less than batch size. data length: {}'.format(len(self.x))
@@ -46,5 +50,6 @@ class Memory(object):
         batch_r = np.array(self.r)[idx]
         batch_done = np.array(self.done)[idx]
         batch_w = np.array(self.w)[idx]
+        batch_f = np.array(self.f)[idx]
 
-        return (batch_x, batch_a, batch_r, batch_done, batch_w)
+        return (batch_x, batch_a, batch_r, batch_done, batch_w, batch_f)
