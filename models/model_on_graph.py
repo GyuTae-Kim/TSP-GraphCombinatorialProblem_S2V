@@ -89,7 +89,7 @@ class ModelOnGraph(Model):
 
         return Q
 
-    def update(self, idx, x, adj, weight, mu, opt_Q):
+    def update(self, idx, x, mu, weight, adj, opt_Q):
         with tf.GradientTape() as tape:
             Q = self.__call__(idx, x, mu, weight, adj)
             loss = losses.mean_squared_error(opt_Q, Q)

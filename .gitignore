@@ -1,2 +1,5 @@
 *.json
 *.pyc
+models/logs/checkpoint
+*.data-00000-of-00001
+*.index

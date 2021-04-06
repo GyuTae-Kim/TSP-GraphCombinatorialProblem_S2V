@@ -1,6 +1,7 @@
 import numpy as np
 
 import os
+import copy
 
 import ops
 
@@ -23,7 +24,7 @@ class Agent(object):
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
-        self.checkpoint_format = os.path.join(self.save_path, 'model-{epoch:04d}.ckpt')
+        self.checkpoint_format = os.path.join(self.save_path, 'latest_weights.ckpt')
 
         self.avg_loss = []
 
@@ -32,6 +33,7 @@ class Agent(object):
         self.run_test()
         
     def run_train(self):
+        print('[Task] Start Train')
         for ep in range(self.train_eps):
             G = self.graph_handler.generate_graph_instance()
             self.model_on_graph.import_instance(G)
@@ -49,16 +51,18 @@ class Agent(object):
 
                 done, fail = self.graph_handler.move_node(a)
                 n_visit += 1
+            print(' [Done] Ep: {}/{}'.format(ep, self.train_eps))
 
-            if e % self.update_freq == 0 and ep != 0:
+            if ep % self.update_freq == 0 and ep != 0:
                 loss = self.update_model()
                 print(' [Done] Ep: {}/{}, Update Model. Loss: {} / fail: {}'.format(ep,
                                                                              self.train_eps,
                                                                              loss,
                                                                              fail))
-            if e % self.save_freq == 0 and ep != 0:
-                self.save_model_weight()
+            if ep % self.save_freq == 0 and ep != 0:
+                self.save_model_weights()
                 print(' [Done] Save model')
+        self.save_model_weights()
 
     def run_test(self):
         for e in range(self.test_eps):
@@ -90,20 +94,21 @@ class Agent(object):
             
             for x, a, r, done, w, f in zip(b_x, b_a, b_r, b_done, b_w, b_f):
                 adj = ops.gen_adjacency_matrix(len(x))
-                Q = self.model_on_graph([a], x, adj, w, f).numpy()
+                Q = self.model_on_graph([a], x, f, w, adj).numpy()
 
                 if done:
                     Q[0, 0] = r
                 else:
-                    next_x = x.copy(); next_x[a] = 1.
+                    next_x = copy.deepcopy(x)
+                    next_x[a, 0] = 1.
                     Q[0, 0] = r + self.discount * np.max(self.model_on_graph(ops.calculate_available_node(next_x),
                                                                              next_x,
                                                                              f,
                                                                              w,
                                                                              adj))
-                loss.append(self.model_on_graph.update([a], x, adj, w, f, Q))
+                loss.append(self.model_on_graph.update([a], x, f, w, adj, Q))
         
         return np.mean(loss)
 
-    def save_model_weight(self):
+    def save_model_weights(self):
         self.model_on_graph.save_weights(self.checkpoint_format)

@@ -51,9 +51,9 @@ def check_done(x):
 
 def calculate_weights(node, feature):
     p1_x = feature[node, :1]
-    p1_y = feature[node, 0:]
+    p1_y = feature[node, 1:]
     p2_x = feature[:, :1]
-    p2_y = feature[:, 0:]
-    weights = np.sqrt((p1_x - p2_x) ** 2 + (p1_y - p2_y) ** 2)[0]
+    p2_y = feature[:, 1:]
+    weights = np.sqrt((p1_x - p2_x) ** 2 + (p1_y - p2_y) ** 2)
 
     return weights

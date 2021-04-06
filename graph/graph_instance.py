@@ -1,5 +1,7 @@
 import numpy as np
 
+import copy
+
 import graph.ops as ops
 
 
@@ -54,10 +56,11 @@ class Instance(object):
                                                            self.x)
         self.weight = ops.calculate_weights(self.current_node,
                                             self.feature)
+        
         if len(self.available_node) == 0:
             done = True
         
-        return self.x, cost, done
+        return copy.deepcopy(self.x), cost, done
 
     def __len__(self):
         return self.n_city
@@ -69,7 +72,7 @@ class Instance(object):
         return self.available_node
     
     def get_x(self):
-        return self.x
+        return copy.deepcopy(self.x)
 
     def get_path(self):
         return self.path
