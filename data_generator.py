@@ -19,8 +19,7 @@ class DataGenerator(Sequence):
 
         print(' [Task] Produces problem distribution')
         city_info = data_loader.get_city_info()
-        self.feature = ops.concatenate_features(city_info['feature'],
-                                                self.feature_keys)
+        self.feature = ops.concatenate_features(city_info['feature'])
         self.problems_idx = data_loader.get_problem()
         print(' [Done] Problem distribution is ready')
 

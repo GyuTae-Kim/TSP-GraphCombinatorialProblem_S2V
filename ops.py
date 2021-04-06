@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def concatenate_features(feature, keys):
+def concatenate_features(feature):
     concat = None
     for k in feature.keys():
         x = np.reshape(feature[k], (-1, 1))

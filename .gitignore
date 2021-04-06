@@ -5,3 +5,4 @@ models/logs/checkpoint
 *.index
 data/test_data/
 *.zip
+results/test_result.txt

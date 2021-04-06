@@ -104,12 +104,9 @@ class ModelOnGraph(Model):
         if not os.path.exists(self.save_path):
             print('  [Done] Couldn\'t find checkpoint')
             return
-        
         latest = tf.train.latest_checkpoint(self.save_path)
-
         if latest is None:
             print('  [Done] Couldn\'t find checkpoint')
             return
-        
         self.load_weights(latest)
         print('  [Done] Load Checkpoint')

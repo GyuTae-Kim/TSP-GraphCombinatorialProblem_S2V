@@ -21,10 +21,15 @@ class Agent(object):
         self.save_path = config['train_params']['save_path']
         self.save_freq = config['train_params']['save_freq']
         self.test_eps = config['test_params']['max_episode']
+        self.save_test_log = config['test_params']['save_test_log']
+        if config['test_params']['save_test_log']:
+            self.test_result_path = config['test_params']['test_result_path']
+        else:
+            self.test_result_path = None
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
-        self.checkpoint_format = os.path.join(self.save_path, 'latest_weights.ckpt')
+        self.checkpoint_format = os.path.join(self.save_path, "training_2/cp-{epoch:04d}.ckpt")
 
         self.avg_loss = []
 
@@ -59,12 +64,18 @@ class Agent(object):
                                                                            self.train_eps,
                                                                            loss))
             if ep % self.save_freq == 0 and ep != 0:
-                self.save_model_weights()
+                self.save_model_weights(ep)
                 print(' [Done] Save model')
-        self.save_model_weights()
+        self.save_model_weights(self.train_eps)
 
     def run_test(self):
         print('[Task]')
+
+        if self.save_test_log:
+            if not os.path.exists(self.test_result_path):
+                f = open(self.test_result_path, 'w')
+                f.close()
+
         for e in range(self.test_eps):
             G = self.graph_handler.generate_graph_instance()
             self.model_on_graph.import_instance(G)
@@ -79,6 +90,11 @@ class Agent(object):
                 n_visit += 1
 
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, G.total_cost))
+            
+            if self.save_test_log:
+                with open(self.test_result_path, 'a') as f:
+                    data = '{} {}\n'.format(G.n_city, G.total_cost)
+                    f.write(data)
 
     def get_Q_value(self, moveable_node):
         mu = self.model_on_graph.embedding()
@@ -110,5 +126,5 @@ class Agent(object):
         
         return np.mean(loss)
 
-    def save_model_weights(self):
-        self.model_on_graph.save_weights(self.checkpoint_format)
+    def save_model_weights(self, ep):
+        self.model_on_graph.save_weights(self.checkpoint_format.format(epoch=ep))

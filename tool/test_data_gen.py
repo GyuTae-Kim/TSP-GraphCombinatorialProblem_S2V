@@ -43,6 +43,9 @@ if __name__ == "__main__":
         config = yaml.load(f, Loader=yaml.FullLoader)
     compute_config(config, args)
 
+    if not os.path.exists(args.save_path):
+        os.makedirs(args.save_path)
+
     data_loader = DataLoader(config)
 
     if args.one_per_one:
