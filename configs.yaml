@@ -21,5 +21,6 @@ test_params:
   max_episode: 50
 
 model_params:
+  load: True
   t: 4
   lr: 0.0001

@@ -16,6 +16,7 @@ class ModelOnGraph(Model):
 
         self.config = config
 
+        self.load = config['model_params']['load']
         self.t = config['model_params']['t']
         self.p = config['model_params']['p']
         self.lr = config['model_params']['lr']
@@ -31,9 +32,10 @@ class ModelOnGraph(Model):
         print(' [Done] Successfully Loadded Evaluation(Q)')
         self.opt = optimizers.Adam(self.lr)
 
-        print(' [Task] Check Checkpoint')
-        self._check_checkpoint()
-        print(' [Done] Checking')
+        if self.load:
+            print(' [Task] Check Checkpoint')
+            self._check_checkpoint()
+            print(' [Done] Checking')
 
     def import_instance(self, G):
         if G is None:

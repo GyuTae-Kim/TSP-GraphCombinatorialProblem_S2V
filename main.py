@@ -1,5 +1,4 @@
 import argparse
-from tensorflow.python.keras.engine.training import Model
 import yaml
 
 from data_loader import DataLoader

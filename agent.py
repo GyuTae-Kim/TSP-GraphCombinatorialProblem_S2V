@@ -49,22 +49,22 @@ class Agent(object):
                     Q = self.get_Q_value(moveable_node)
                     a = moveable_node[np.argmax(Q)]
 
-                done, fail = self.graph_handler.move_node(a)
+                done, _ = self.graph_handler.move_node(a)
                 n_visit += 1
-            print(' [Done] Ep: {}/{}'.format(ep, self.train_eps))
+            print(' [Train] Ep: {}/{}'.format(ep, self.train_eps))
 
             if ep % self.update_freq == 0 and ep != 0:
                 loss = self.update_model()
-                print(' [Done] Ep: {}/{}, Update Model. Loss: {} / fail: {}'.format(ep,
-                                                                             self.train_eps,
-                                                                             loss,
-                                                                             fail))
+                print('  [Train] Ep: {}/{}, Update Model. Loss: {}'.format(ep,
+                                                                           self.train_eps,
+                                                                           loss))
             if ep % self.save_freq == 0 and ep != 0:
                 self.save_model_weights()
                 print(' [Done] Save model')
         self.save_model_weights()
 
     def run_test(self):
+        print('[Task]')
         for e in range(self.test_eps):
             G = self.graph_handler.generate_graph_instance()
             self.model_on_graph.import_instance(G)
@@ -75,7 +75,7 @@ class Agent(object):
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
                 a = moveable_node[np.argmax(Q)]
-                self.graph_handler.move_node(a)
+                done, _ = self.graph_handler.move_node(a)
                 n_visit += 1
 
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, G.total_cost))
