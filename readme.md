@@ -15,14 +15,26 @@ git clone https://github.com/GyuTae-Kim/TSP-GraphCombinatorialProblem_S2V.git
 cd TSP-GraphCombinatorialProblem_S2V
 ```
 
-### Train Model (+ Test Model)
+### Train Model (+ Test)
 ```
-python main.py --config=configs.yaml
+python main.py --config configs.yaml
 ```
 
 ### Test Model (Only)
 ```
-python main.py --config=configs.yaml --test_only
+python main.py --config configs.yaml --test_only
+```
+
+### (Optionally) Test Model with Generated Dataset
+
+- Generate Dataset
+```
+python tool/test_data_gen.py --config configs.yaml --save_path data/test_data --one_per_one
+```
+
+- Test Model
+```
+python main.py --test_only --config configs.yaml --test_data_path data/test_data
 ```
 
 ## Reference
