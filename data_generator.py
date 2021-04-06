@@ -1,13 +1,9 @@
 import numpy as np
 import pandas as pd
 
-import tensorflow as tf
 from tensorflow.keras.utils import Sequence
 
-from data_loader import DataLoader
-
 from graph.graph_instance import Instance
-
 import ops
 
 
