@@ -26,7 +26,6 @@ class Instance(object):
                                                            self.x)
         self.weight = ops.calculate_weights(self.current_node,
                                             self.feature)
-        self.total_cost = 0.
         self.step_count = 0
         self.path = [self.current_node]
 
@@ -37,21 +36,22 @@ class Instance(object):
         
         return info
 
-    def move(self, next_node):
+    def move(self, next_node, idx=None):
         if next_node not in self.available_node:
             raise ValueError('   [Err] Unable to move to that node.'
                              'now: {} dest: {}'.format(self.current_node,
                                                        next_node))
         
         self.x = ops.calculate_x(self.x, next_node)
-        cost = ops.euclidean_distance(self.feature[self.current_node],
-                                      self.feature[next_node])
-        self.total_cost += cost
+
         done = ops.check_done(self.x)
 
         self.current_node = next_node
         self.step_count += 1
-        self.path.append(self.current_node)
+        if idx is None:
+            self.path.append(self.current_node)
+        else:
+            self.path.insert(idx, self.current_node)
         self.available_node = ops.calculate_available_node(self.node_list,
                                                            self.x)
         self.weight = ops.calculate_weights(self.current_node,
@@ -60,7 +60,7 @@ class Instance(object):
         if len(self.available_node) == 0:
             done = True
         
-        return copy.deepcopy(self.x), cost, done
+        return copy.deepcopy(self.x), done
 
     def __len__(self):
         return self.n_city
@@ -76,9 +76,6 @@ class Instance(object):
 
     def get_path(self):
         return self.path
-
-    def get_total_cost(self):
-        return self.total_cost
 
     def get_feature(self):
         return self.feature

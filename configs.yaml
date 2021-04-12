@@ -5,17 +5,18 @@ data_params:
   min_city: 50
   max_city: 500
   normalize: True
+  use_help_func: True
 
 train_params:
   batch_size: 20
   memory_size: 1000
   max_episode: 10000
   memory_saving_mode: False
-  update_freq: 10
+  update_freq: 5
   train_epoch: 5
-  discount: 0.99
+  discount: 0.9
   save_path: 'models/logs'
-  save_freq: 100
+  save_freq: 1000
 
 test_params:
   max_episode: 50
@@ -23,4 +24,4 @@ test_params:
 model_params:
   load: True
   t: 4
-  lr: 0.0001
+  lr: 0.00001

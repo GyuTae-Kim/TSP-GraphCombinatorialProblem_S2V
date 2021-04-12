@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Model, initializers
+from tensorflow.keras import layers, Model, initializers, activations
 
 
 class Structure2Vec(Model):
@@ -47,7 +47,8 @@ class Evaluation(Model):
 
         self.p = p
 
-        self.theta5 = layers.Dense(1, input_shape=(None, p * 2))
+        self.theta5 = layers.Dense(1, input_shape=(None, p * 2),
+                                   activation=activations.tanh)
         self.theta6 = layers.Dense(p, input_shape=(None, p))
         self.theta7 = layers.Dense(p, input_shape=(None, p))
         self.concat = layers.Concatenate(axis=1)

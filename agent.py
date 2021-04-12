@@ -29,7 +29,7 @@ class Agent(object):
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
-        self.checkpoint_format = os.path.join(self.save_path, "training_2/cp-{epoch:04d}.ckpt")
+        self.checkpoint_format = os.path.join(self.save_path, "cp-{epoch:04d}.ckpt")
 
         self.avg_loss = []
 
@@ -56,7 +56,8 @@ class Agent(object):
 
                 done, _ = self.graph_handler.move_node(a)
                 n_visit += 1
-            print(' [Train] Ep: {}/{}'.format(ep, self.train_eps))
+            
+            print(' [Train] Ep: {}/{} Step: {} Cost: {}'.format(ep, self.train_eps, self.graph_handler.cur_step, self.graph_handler.bef_cost))
 
             if ep % self.update_freq == 0 and ep != 0:
                 loss = self.update_model()
@@ -89,11 +90,12 @@ class Agent(object):
                 done, _ = self.graph_handler.move_node(a)
                 n_visit += 1
 
-            print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, G.total_cost))
+            total_cost = self.graph_handler.bef_cost
+            print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, total_cost))
             
             if self.save_test_log:
                 with open(self.test_result_path, 'a') as f:
-                    data = '{} {}\n'.format(G.n_city, G.total_cost)
+                    data = '{} {}\n'.format(G.n_city, total_cost)
                     f.write(data)
 
     def get_Q_value(self, moveable_node):

@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Model, optimizers, losses
+from tensorflow.keras import layers, Model, optimizers
 
 from models.model_base import Structure2Vec, Evaluation
 
@@ -94,7 +94,7 @@ class ModelOnGraph(Model):
     def update(self, idx, x, mu, weight, adj, opt_Q):
         with tf.GradientTape() as tape:
             Q = self.__call__(idx, x, mu, weight, adj)
-            loss = losses.mean_squared_error(opt_Q, Q)
+            loss = tf.keras.losses.mean_squared_error(opt_Q, Q)
         grads = tape.gradient(loss, self.trainable_weights)
         self.opt.apply_gradients(zip(grads, self.trainable_weights))
 
@@ -108,5 +108,6 @@ class ModelOnGraph(Model):
         if latest is None:
             print('  [Done] Couldn\'t find checkpoint')
             return
+        print('  [Task] Load Weights From {}'.format(latest))
         self.load_weights(latest)
         print('  [Done] Load Checkpoint')
