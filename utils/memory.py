@@ -45,11 +45,11 @@ class Memory(object):
                                batch_size,
                                replace=False)
         
-        batch_x = np.array(self.x)[idx]
-        batch_a = np.array(self.a)[idx]
-        batch_r = np.array(self.r)[idx]
-        batch_done = np.array(self.done)[idx]
-        batch_w = np.array(self.w)[idx]
-        batch_f = np.array(self.f)[idx]
+        batch_x = np.array(self.x, dtype=np.float32)[idx]
+        batch_a = np.array(self.a, dtype=np.float32)[idx]
+        batch_r = np.array(self.r, dtype=np.float32)[idx]
+        batch_done = np.array(self.done, dtype=np.float32)[idx]
+        batch_w = np.array(self.w, dtype=np.float32)[idx]
+        batch_f = np.array(self.f, dtype=np.float32)[idx]
 
         return (batch_x, batch_a, batch_r, batch_done, batch_w, batch_f)
