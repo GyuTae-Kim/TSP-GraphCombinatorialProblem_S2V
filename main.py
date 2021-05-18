@@ -9,6 +9,7 @@ from data_loader import DataLoader
 from data_generator import DataGenerator
 from graph_handler import GraphHandler
 from models.model_on_graph import ModelOnGraph
+from models.models import create_model
 from agent import Agent
 
 
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     graph_handler = GraphHandler(config, data_gen)
     print('[Done] Loaded Graph Handler')
     print('[Task] Build Model')
-    model_on_graph = ModelOnGraph(config)
+    model_on_graph = create_model(config)
     print('[Done] Built Model')
     print('[Task] Load Agent')
     agent = Agent(config, graph_handler, model_on_graph)

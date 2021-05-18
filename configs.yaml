@@ -22,6 +22,7 @@ test_params:
   max_episode: 50
 
 model_params:
+  model: 'S2V'
   load: True
   t: 4
   lr: 0.00001

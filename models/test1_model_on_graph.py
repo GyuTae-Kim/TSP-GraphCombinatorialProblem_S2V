@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model, optimizers
 
-from .model_base import Structure2Vec, Evaluation
+from .test1_model_base import EmbeddingNetwork, EvaluationNetwork
 
 import os
 
@@ -25,10 +25,10 @@ class ModelOnGraph(Model):
         self.G, self.node_list, self.adj, self.feature = None, None, None, None
 
         print(' [Task] Load S2V')
-        self.s2v = Structure2Vec(self.p)
+        self.embedding_net = EmbeddingNetwork(self.p)
         print(' [Done] Successfully Loaded S2V')
         print(' [Task] Load Evaluation(Q)')
-        self.ev = Evaluation(self.p)
+        self.evaluate_net = EvaluationNetwork(self.p)
         print(' [Done] Successfully Loadded Evaluation(Q)')
         self.opt = optimizers.Adam(self.lr)
 
@@ -36,9 +36,9 @@ class ModelOnGraph(Model):
             print(' [Task] Check Checkpoint')
             self._check_checkpoint()
             print(' [Done] Checking')
-    
+
     def name(self):
-        return 'ModelOnGraph(S2V)'
+        return 'ModelOnGraph(Test1)'
 
     def import_instance(self, G):
         if G is None:
@@ -75,7 +75,7 @@ class ModelOnGraph(Model):
                                   dtype=tf.float32)
 
         for t in range(self.t):
-            mu = self.s2v(x, mu, w, adj)
+            mu = self.embedding_net(x, mu, w, adj)
 
         return mu
 
@@ -85,7 +85,7 @@ class ModelOnGraph(Model):
                                     dtype=tf.float32)
         sum_mu = sum_mu * brod
         node_mu = ops.specific_value(mu, idx)
-        Q = self.ev(sum_mu, node_mu)
+        Q = self.evaluate_net(sum_mu, node_mu)
 
         return Q
 
