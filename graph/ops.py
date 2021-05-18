@@ -25,12 +25,12 @@ def _vec_caculate_with_adjacency(node, A):
         return False
 
 def gen_init_x(node_count):
-    x = np.zeros((node_count, 1))
+    x = np.zeros((node_count, 1), dtype=np.float32)
     x[0, 0] = 1.
     return x
 
 def gen_adjacency_matrix(node_count):
-    A = np.ones((node_count, node_count)) - np.eye(node_count)
+    A = np.ones((node_count, node_count), dtype=np.float32) - np.eye(node_count, dtype=np.float32)
     return A
 
 def calculate_x(x, next_node):

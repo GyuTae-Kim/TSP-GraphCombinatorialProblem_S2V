@@ -45,7 +45,7 @@ class Memory(object):
                                batch_size,
                                replace=False)
         
-        batch_x = np.array(self.x, dtype=np.float32)[idx]
+        batch_x = np.array(self.x)[idx]
         batch_a = np.array(self.a, dtype=np.float32)[idx]
         batch_r = np.array(self.r, dtype=np.float32)[idx]
         batch_done = np.array(self.done, dtype=np.float32)[idx]
