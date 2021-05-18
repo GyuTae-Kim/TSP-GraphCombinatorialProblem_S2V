@@ -64,7 +64,6 @@ class ModelOnGraph(Model):
             # assert self.G is None, '  [Err] Import instance first.'
             mu = self.feature
 
-        print(w.shape)
         x = tf.convert_to_tensor(x,
                                  dtype=tf.float32)
         adj = tf.convert_to_tensor(adj,
