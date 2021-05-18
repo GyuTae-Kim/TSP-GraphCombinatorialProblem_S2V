@@ -44,7 +44,7 @@ class EvaluationNetwork(Model):
                                    activation=activations.relu)
         self.dense1 = layers.Dense(32, activation=activations.relu)
         self.dense2 = layers.Dense(64, activation=activations.relu)
-        self.output = layers.Dense(1, activation=activations.relu)
+        self.output_dense = layers.Dense(1, activation=activations.relu)
         self.concat = layers.Concatenate(axis=1)
 
     def call(self, sum_mu, mu):
@@ -57,6 +57,6 @@ class EvaluationNetwork(Model):
         x = self.theta5(unit5)
         x = self.dense1(x)
         x = self.dense2(x)
-        outputs = self.output(x)
+        outputs = self.output_dense(x)
 
         return outputs
