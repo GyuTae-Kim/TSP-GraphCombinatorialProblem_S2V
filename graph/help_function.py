@@ -1,52 +1,39 @@
 import numpy as np
 
-import copy
-
-import graph.ops as ops
-
 
 class HelpFunction():
 
     def __init__(self, config):
-        self.feature = None
         self.config = config
+        self.weight= None
 
-        self.n_key = len(config['data_params']['key'])
+        self.vec_calculate_dist = np.vectorize(self._calculate_distance,
+                                               excluded=['candidate'],
+                                               otypes=[object])
 
-    def get_insert_pos(self, path, new_node, feature):
-        self.feature = feature
-        _path = copy.deepcopy(path)
-        _path = self._generate_candidate(_path, new_node)
-        cost = [self._calculate_cost_on_path(p) for p in _path]
-        idx = np.argmin(cost)
-
-        return idx, cost[idx]
-
-    def _generate_candidate(self, path, new_node):
+    def get_insert_pos(self, path, new_node, weight):
+        self.weight = weight
         length = len(path) + 1
-        path *= length
-        idx = 0
+        candidate = self._generate_candidate(path, new_node, length)
+        dist = self._calculate_cost_on_path(candidate, length)
+        idx = np.argmin(dist)
 
-        for _ in range(length):
-            path.insert(idx, new_node)
-            idx += length + 1
+        return idx, dist[idx]
+
+    def _generate_candidate(self, path, new_node, length):
+        candidate = np.eye(length, dtype=np.int) * new_node
+        index = np.where(candidate == 0)
+        p = np.array(path * length, dtype=np.int)
+        candidate[index] = p
+
+        return candidate
+
+    def _calculate_cost_on_path(self, candidate, length):
+        index = np.arange(length - 1)
+        dist = np.array(self.vec_calculate_dist(index=index, candidate=candidate).tolist(), dtype=np.float32)
+        dist = np.sum(dist, axis=0)
         
-        path = np.array(path, dtype=np.int32)
-        path = np.reshape(path, (-1, length))
-
-        return path
-
-    def _calculate_cost_on_path(self, path):
-        path_s1, path_s2 = path[:-1], path[1:]
-        p1 = np.reshape(self.feature[path_s1, :], (-1, self.n_key))
-        p2 = np.reshape(self.feature[path_s2, :], (-1, self.n_key))
-        dist = self._calculate_distance_function(p1, p2)
-        dist += np.math.sqrt(np.sum((self.feature[0, :] - self.feature[-1, :]) ** 2))
-
         return dist
 
-    def _calculate_distance_function(self, p1, p2):
-        dist = np.sqrt(np.sum((p1 - p2) ** 2, axis=1))
-        total_dist = np.sum(dist)
-
-        return total_dist
+    def _calculate_distance(self, index, candidate):
+        return self.weight[candidate[:, index], candidate[:, index + 1]].tolist()

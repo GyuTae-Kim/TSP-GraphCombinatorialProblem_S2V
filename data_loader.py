@@ -29,7 +29,7 @@ class DataLoader(object):
         self.df.columns = self.sort_value + self.feature_keys
         self.df.sort_values(by=self.sort_value, axis=0)
         self.df.reset_index(drop=True)
-        print(' [Done] Successfully Load city data')
+        print(' [Done] Successfully Loaded city data')
 
         self.city_count = len(self.df)
         self.city_list = self.df['id'].to_numpy()
@@ -51,7 +51,7 @@ class DataLoader(object):
                                         high=self.max_city + 1,
                                         size=self.data_length)
         self.problem = self._generate_city_problem()
-        print(' [Done] Generate TSP problems')
+        print(' [Done] Generated TSP problems')
 
     def get_problem(self):
         return self.problem

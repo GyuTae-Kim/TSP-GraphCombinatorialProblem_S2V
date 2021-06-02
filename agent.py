@@ -1,9 +1,11 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
-import copy
 
 import ops
+from graph_handler import GraphHandler
+from utils.memory import Memory
 
 
 class Agent(object):
@@ -12,14 +14,17 @@ class Agent(object):
         self.config = config
         self.graph_handler = graph_handler
         self.model_on_graph = model_on_graph
+        self.test_data_gen = None
 
         self.batch_size = config['train_params']['batch_size']
         self.train_eps = config['train_params']['max_episode']
-        self.update_freq = config['train_params']['update_freq']
         self.train_epoch = config['train_params']['train_epoch']
         self.discount = config['train_params']['discount']
         self.save_path = config['train_params']['save_path']
         self.save_freq = config['train_params']['save_freq']
+        self.n_step = config['train_params']['n_step']
+        self.test_while_training = config['train_params']['test_while_training']
+        self.test_freq = config['train_params']['test_freq']
         self.test_eps = config['test_params']['max_episode']
         self.save_test_log = config['test_params']['save_test_log']
         if config['test_params']['save_test_log']:
@@ -31,7 +36,7 @@ class Agent(object):
             os.makedirs(self.save_path)
         self.checkpoint_format = os.path.join(self.save_path, "cp-{epoch:04d}.ckpt")
 
-        self.avg_loss = []
+        self.loss = []
 
     def running(self):
         self.run_train()
@@ -44,7 +49,8 @@ class Agent(object):
             self.model_on_graph.import_instance(G)
             e = 1. / ((ep / 10) + 1)
             done = False
-            n_visit = 1
+            step = 0
+            ep_loss = []
 
             while not done:
                 moveable_node = self.graph_handler.moveable_node()
@@ -54,23 +60,39 @@ class Agent(object):
                     Q = self.get_Q_value(moveable_node)
                     a = moveable_node[np.argmax(Q)]
 
-                done, _ = self.graph_handler.move_node(a)
-                n_visit += 1
-            
-            print(' [Train] Ep: {}/{} Step: {} Cost: {}'.format(ep, self.train_eps, self.graph_handler.cur_step, self.graph_handler.bef_cost))
+                done = self.graph_handler.move_node(a)
+                step += 1
 
-            if ep % self.update_freq == 0 and ep != 0:
-                loss = self.update_model()
-                print('  [Train] Ep: {}/{}, Update Model. Loss: {}'.format(ep,
-                                                                           self.train_eps,
-                                                                           loss))
+                if step >= self.n_step:
+                    if self.graph_handler.is_available_train():
+                        loss = self.update_model()
+                        ep_loss.append(loss)
+
+            if len(ep_loss) > 0:
+                ep_avg_loss = np.mean(ep_loss)
+                self.loss.append(ep_avg_loss)
+            else:
+                ep_avg_loss = None
+            print(' [Train] Ep: {}/{} Step: {} Cost: {} Loss: {}'.format(ep,
+                                                                         self.train_eps,
+                                                                         self.graph_handler.cur_step,
+                                                                         self.graph_handler.bef_cost,
+                                                                         ep_avg_loss))
+
             if ep % self.save_freq == 0 and ep != 0:
                 self.save_model_weights(ep)
                 print(' [Done] Save model')
+            
+            if ep % self.test_freq == 0 and ep != 0:
+                self.run_test_while_training(ep)
+                
+
         self.save_model_weights(self.train_eps)
+        self.save_loss_plt()
 
     def run_test(self):
-        print('[Task]')
+        print('[Task] Start Test')
+        cost = []
 
         if self.save_test_log:
             if not os.path.exists(self.test_result_path):
@@ -87,16 +109,31 @@ class Agent(object):
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
                 a = moveable_node[np.argmax(Q)]
-                done, _ = self.graph_handler.move_node(a)
+                done = self.graph_handler.move_node(a)
                 n_visit += 1
 
             total_cost = self.graph_handler.bef_cost
+            cost.append(total_cost)
+            
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, total_cost))
             
-            if self.save_test_log:
+            if self.save_test_log and self.graph_handler.saving:
                 with open(self.test_result_path, 'a') as f:
                     data = '{} {}\n'.format(G.n_city, total_cost)
                     f.write(data)
+            elif self.save_test_log and self.test_while_training:
+                with open(self.graph_handler.get_result_path):
+                    data = '{} {}\n'.format(G.n_city, total_cost)
+                    f.write(data)
+    
+    def run_test_while_training(self, ep):
+        test_graph_handler = GraphHandler(self.config, self.test_data_gen, None)
+        test_graph_handler.set_saving_mode(False)
+        test_graph_handler.set_result_path(os.path.join('results', '{}_test.txt'.format(ep)))
+        temp = self.graph_handler
+        self.graph_handler = test_graph_handler
+        self.run_test()
+        self.graph_handler = temp
 
     def get_Q_value(self, moveable_node):
         mu = self.model_on_graph.embedding()
@@ -108,25 +145,34 @@ class Agent(object):
         loss = []
 
         for e in range(self.train_epoch):
-            b_x, b_a, b_r, b_done, b_w, b_f = self.graph_handler.genenrate_train_sample()
+            batch_G_idx, batch_S, batch_v, batch_R = self.graph_handler.genenrate_train_sample()
             
-            for x, a, r, done, w, f in zip(b_x, b_a, b_r, b_done, b_w, b_f):
-                adj = ops.gen_adjacency_matrix(len(x))
-                Q = self.model_on_graph([a], x, f, w, adj).numpy()
+            for i, S, v, R in zip(batch_G_idx, batch_S, batch_v, batch_R):
+                S, future_S = S[0], S[1]
+                G = self.graph_handler.get_instance(i)
+                A = G.get_adjacency_matrix()
+                F = G.get_feature()
+                W = G.get_weight()
 
-                if done:
-                    Q[0, 0] = r
-                else:
-                    next_x = copy.deepcopy(x)
-                    next_x[a, 0] = 1.
-                    Q[0, 0] = r + self.discount * np.max(self.model_on_graph(ops.calculate_available_node(next_x),
-                                                                             next_x,
-                                                                             f,
-                                                                             w,
-                                                                             adj))
-                loss.append(self.model_on_graph.update([a], x, f, w, adj, Q))
+                Q = self.model_on_graph([v], S, F, W, A).numpy()
+                Q[0, 0] = R + self.discount * np.max(self.model_on_graph(ops.calculate_available_node(future_S),
+                                                                         future_S,
+                                                                         F,
+                                                                         W,
+                                                                         A))
+                loss.append(self.model_on_graph.update([v], S, F, W, A, Q))
         
         return np.mean(loss)
+    
+    def set_test_data_gen(self, data_gen):
+        self.test_data_gen = data_gen
 
     def save_model_weights(self, ep):
         self.model_on_graph.save_weights(self.checkpoint_format.format(epoch=ep))
+    
+    def save_loss_plt(self):
+        plt.plot(self.loss)
+        plt.ylabel('Loss')
+        plt.savefig('results/loss.png')
+
+        self.loss.clear()

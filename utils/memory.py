@@ -3,53 +3,55 @@ import numpy as np
 
 class Memory(object):
 
-    def __init__(self, memory_size, batch_size):
-        self.memory_size = memory_size
-        self.batch_size = batch_size
+    def __init__(self, config, data_gen):
+        self.config = config
+        self.data_gen = data_gen
 
-        self.x = []
-        self.a = []
-        self.r = []
-        self.done = []
-        self.w = []
-        self.f = []
+        self.memory_size = config['train_params']['memory_size']
+        self.batch_size = config['train_params']['batch_size']
+
+        self.g_idx = []
+        self.S = []
+        self.v = []
+        self.R = []
+
+        self.cur_idx = 0
     
-    def append(self, x, a, r, done, w, f):
-        self.x.append(x)
-        self.a.append(a)
-        self.r.append(r)
-        self.done.append(done)
-        self.w.append(w)
-        self.f.append(f)
+    def set_index(self, idx):
+        self.cur_idx = idx
+    
+    def append(self, S, v, R):
+        self.g_idx.append(self.cur_idx)
+        self.S.append(S)
+        self.v.append(v)
+        self.R.append(R)
 
-        if len(self.x) > self.memory_size:
-            self.x.pop(0)
-            self.a.pop(0)
-            self.r.pop(0)
-            self.done.pop(0)
-            self.w.pop(0)
-            self.f.pop(0)
+        if len(self.g_idx) > self.memory_size:
+            self.g_idx.pop(0)
+            self.S.pop(0)
+            self.v.pop(0)
+            self.R.pop(0)
 
     def clear(self):
-        self.x.clear()
-        self.a.clear()
-        self.r.clear()
-        self.done.clear()
-        self.w.clear()
-        self.f.clear()
+        self.g_idx.clear()
+        self.S.clear()
+        self.v.clear()
+        self.R.clear()
+    
+    def sample(self):
+        data_len = len(self.g_idx)
+        assert self.batch_size - 1 < data_len, '   [err] Data is less than batch size. data length: {} batch_size: {}'.format(data_len, self.batch_size)
 
-    def sample(self, batch_size):
-        assert batch_size < len(self.x), '   [err] Data is less than batch size. data length: {}'.format(len(self.x))
-
-        idx = np.random.choice(np.arange(len(self.x)),
-                               batch_size,
+        idx = np.random.choice(np.arange(data_len),
+                               self.batch_size,
                                replace=False)
         
-        batch_x = np.array(self.x, dtype=object)[idx]
-        batch_a = np.array(self.a)[idx]
-        batch_r = np.array(self.r, dtype=np.float32)[idx]
-        batch_done = np.array(self.done)[idx]
-        batch_w = np.array(self.w, dtype=object)[idx]
-        batch_f = np.array(self.f, dtype=object)[idx]
+        batch_G_idx = np.array(self.g_idx, dtype=np.int32)[idx]
+        batch_S = np.array(self.S, dtype=np.object)[idx]
+        batch_v = np.array(self.v, dtype=np.int32)[idx]
+        batch_R = np.array(self.R, dtype=np.float32)[idx]
 
-        return (batch_x, batch_a, batch_r, batch_done, batch_w, batch_f)
+        return (batch_G_idx, batch_S, batch_v, batch_R)
+    
+    def __len__(self):
+        return len(self.g_idx)

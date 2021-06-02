@@ -1,6 +1,27 @@
 import numpy as np
 
 
+def _calculate_with_adjacency(node, A):
+    if A[node] == 1.:
+        return True
+    else:
+        return False
+
+def _calculate_weights(node, feature):
+    p1_x = feature[node, :1]
+    p1_y = feature[node, 1:]
+    p2_x = feature[:, :1]
+    p2_y = feature[:, 1:]
+    weights = np.sqrt((p1_x - p2_x) ** 2 + (p1_y - p2_y) ** 2)
+    
+    return weights.tolist()
+
+vec_calculate_weight_adjacency = np.vectorize(_calculate_with_adjacency)
+vec_calculate_weights = np.vectorize(_calculate_weights,
+                                     excluded=['feature'],
+                                     otypes=[object])
+
+'''
 def calculate_available_node(node_list, x, connected_all=True, A=None):
     _x = np.squeeze(x, axis=-1)
     node_idx = np.where(_x==0)[0]
@@ -10,19 +31,13 @@ def calculate_available_node(node_list, x, connected_all=True, A=None):
             raise ValueError('    [Err] If connected_all == False, adjency matrix and current node must not be None')
         if len(A.shape) != 1:
             raise ValueError('    [Err] Adjency matrix rank must be 1.')
-        vec_cal = np.vectorize(_vec_caculate_with_adjacency)
-        mask = vec_cal(node_idx, A)
+        mask = vec_calculate_weight_adjacency(node_idx, A)
         node_idx = node_idx[mask]
     
     node = node_list[node_idx]
 
     return node
-
-def _vec_caculate_with_adjacency(node, A):
-    if A[node] == 1.:
-        return True
-    else:
-        return False
+'''
 
 def gen_init_x(node_count):
     x = np.zeros((node_count, 1), dtype=np.float32)
@@ -50,10 +65,8 @@ def check_done(x):
         return True
 
 def calculate_weights(node, feature):
-    p1_x = feature[node, :1]
-    p1_y = feature[node, 1:]
-    p2_x = feature[:, :1]
-    p2_y = feature[:, 1:]
-    weights = np.sqrt((p1_x - p2_x) ** 2 + (p1_y - p2_y) ** 2)
+    weights = vec_calculate_weights(node=np.array(node), feature=np.array(feature)).tolist()
+    weights = np.array(weights, dtype=np.float32)
+    weights = np.squeeze(weights, axis=-1)
 
     return weights

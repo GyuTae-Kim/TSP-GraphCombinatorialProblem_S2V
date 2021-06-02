@@ -17,6 +17,8 @@ def gen_adjacency_matrix(node_count):
     return A
 
 def calculate_available_node(x):
-    node_idx = np.where(x==0)[0]
+    if len(x.shape) == 2:
+        x = np.squeeze(x, -1)
+    node_idx = np.where(x == 0)[0]
 
     return node_idx

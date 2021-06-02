@@ -16,15 +16,14 @@ class Instance(object):
         self.n_city = n_city
         self.feature = feature
 
-        self.node_list = np.arange(n_city)
+        self.node_list = np.arange(n_city, dtype=np.int32)
+        self.available_node = np.arange(1, n_city, dtype=np.int32).tolist()
         self.A = ops.gen_adjacency_matrix(n_city)
         self.x = ops.gen_init_x(n_city)
         self.cost_func = ops.euclidean_distance
 
         self.current_node = 0
-        self.available_node = ops.calculate_available_node(self.node_list,
-                                                           self.x)
-        self.weight = ops.calculate_weights(self.current_node,
+        self.weight = ops.calculate_weights(self.node_list,
                                             self.feature)
         self.step_count = 0
         self.path = [self.current_node]
@@ -52,15 +51,13 @@ class Instance(object):
             self.path.append(self.current_node)
         else:
             self.path.insert(idx, self.current_node)
-        self.available_node = ops.calculate_available_node(self.node_list,
-                                                           self.x)
-        self.weight = ops.calculate_weights(self.current_node,
-                                            self.feature)
+        
+        self.available_node.remove(next_node)
         
         if len(self.available_node) == 0:
             done = True
         
-        return copy.deepcopy(self.x), done
+        return done
 
     def __len__(self):
         return self.n_city
@@ -70,6 +67,9 @@ class Instance(object):
 
     def get_available_node(self):
         return self.available_node
+    
+    def get_adjacency_matrix(self):
+        return self.A
     
     def get_x(self):
         return copy.deepcopy(self.x)

@@ -8,12 +8,13 @@ data_params:
   use_help_func: True
 
 train_params:
-  batch_size: 20
+  batch_size: 5
   memory_size: 1000
   max_episode: 10000
-  memory_saving_mode: False
-  update_freq: 5
-  train_epoch: 5
+  test_while_training: True   # Required Test Data
+  test_freq: 100              # If test_while_training is True
+  n_step: 24    # (Recommended Value) => min_city // 2 - 1
+  train_epoch: 1
   discount: 0.9
   save_path: 'models/logs'
   save_freq: 1000
