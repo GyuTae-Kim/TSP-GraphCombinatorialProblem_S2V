@@ -3,9 +3,11 @@ import matplotlib.pyplot as plt
 
 import os
 
+import tensorflow as tf
+import tensorflow.keras.backend as K
+
 import ops
 from graph_handler import GraphHandler
-from utils.memory import Memory
 
 
 class Agent(object):
@@ -31,6 +33,7 @@ class Agent(object):
             self.test_result_path = config['test_params']['test_result_path']
         else:
             self.test_result_path = None
+        self.discount = K.variable(self.discount)
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
@@ -81,7 +84,7 @@ class Agent(object):
 
             if ep % self.save_freq == 0 and ep != 0:
                 self.save_model_weights(ep)
-                print(' [Done] Save model')
+                print(' [Done] Saved model')
             
             if ep % self.test_freq == 0 and ep != 0:
                 self.run_test_while_training(ep)
@@ -153,13 +156,14 @@ class Agent(object):
                 A = G.get_adjacency_matrix()
                 F = G.get_feature()
                 W = G.get_weight()
+                R = tf.convert_to_tensor(R, dtype=tf.float32)
 
-                Q = self.model_on_graph([v], S, F, W, A).numpy()
-                Q[0, 0] = R + self.discount * np.max(self.model_on_graph(ops.calculate_available_node(future_S),
-                                                                         future_S,
-                                                                         F,
-                                                                         W,
-                                                                         A))
+                Q = tf.convert_to_tensor([[0.]], dtype=tf.float32)
+                Q += R + self.discount * K.max(self.model_on_graph(ops.calculate_available_node(future_S),
+                                                                   future_S,
+                                                                   F,
+                                                                   W,
+                                                                   A))
                 loss.append(self.model_on_graph.update([v], S, F, W, A, Q))
         
         return np.mean(loss)

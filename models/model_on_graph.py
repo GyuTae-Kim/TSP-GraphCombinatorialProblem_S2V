@@ -1,7 +1,5 @@
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model, optimizers
-import tensorflow.keras.backend as K
 
 import os
 
@@ -76,7 +74,7 @@ class ModelOnGraph(Model):
 
     def evaluate(self, idx, mu):
         sum_mu = tf.reduce_sum(mu, axis=0, keepdims=True)
-        brod = K.ones((len(idx), 1), dtype=tf.float32)
+        brod = tf.ones((len(idx), 1), dtype=tf.float32)
         sum_mu = sum_mu * brod
         node_mu = ops.specific_value(mu, idx)
         Q = self.ev(sum_mu, node_mu)

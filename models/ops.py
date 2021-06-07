@@ -1,11 +1,10 @@
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras.backend as K
 
 
 def specific_value(mu, idx):
     len_idx = len(idx)
-    brod = K.ones((len_idx, *mu.shape), dtype=tf.float32)
+    brod = tf.ones((len_idx, *mu.shape), dtype=tf.float32)
     brod_mu = tf.expand_dims(mu, axis=0) * brod
     h = np.zeros_like(brod_mu, dtype=np.float32)
     h[np.arange(len_idx), idx, :] = 1.

@@ -2,11 +2,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.keras import Model, optimizers
 
-from .test1_model_base import EmbeddingNetwork, EvaluationNetwork
-
 import os
 
-import models.ops as ops
+from .test1_model_base import EmbeddingNetwork, EvaluationNetwork
+from . import ops
 
 
 class ModelOnGraph(Model):

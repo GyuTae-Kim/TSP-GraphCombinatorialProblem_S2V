@@ -6,3 +6,4 @@ models/logs/checkpoint
 data/test_data/
 *.zip
 results/test_result.txt
+data/test_data2/

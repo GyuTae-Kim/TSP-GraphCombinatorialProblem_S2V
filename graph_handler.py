@@ -1,7 +1,5 @@
 import numpy as np
 
-from utils.memory import Memory as Mem
-
 
 class GraphHandler(object):
     
@@ -38,7 +36,7 @@ class GraphHandler(object):
     def move_node(self, a):
         x = self.G.get_x()
         if self.use_help_func:
-            idx, cost = self.H.get_insert_pos(self.G.path, a, self.weight)
+            idx, cost = self.H.get_insert_pos(self.G.path, a)
             done = self.G.move(a, idx)
             r = self.bef_cost - cost
             self.bef_cost = cost
@@ -74,6 +72,9 @@ class GraphHandler(object):
         self.weight = self.G.get_weight()
         self.cur_step = 0
         self.bef_cost = 0.
+
+        if self.use_help_func:
+            self.H.set_weights(self.weight)
 
         if self.data_idx <= self.train_eps:
             self.r, self.S, self.v = [], [], []

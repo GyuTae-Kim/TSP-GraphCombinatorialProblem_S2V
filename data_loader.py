@@ -16,6 +16,7 @@ class DataLoader(object):
         self.max_city = config['data_params']['max_city']
         self.data_length = config['train_params']['max_episode'] +\
                            config['test_params']['max_episode']
+        self.easy_start = config['train_params']['easy_start']
 
         if not os.path.exists(self.path):
             raise FileNotFoundError('[*Err] No such file: \'{}\''.format(self.path))
@@ -50,6 +51,8 @@ class DataLoader(object):
         self.n_city = np.random.randint(low=self.min_city,
                                         high=self.max_city + 1,
                                         size=self.data_length)
+        if self.easy_start is not None:
+            self.n_city[:self.easy_start] = np.arange(self.min_city, self.min_city + self.easy_start, dtype=np.int)
         self.problem = self._generate_city_problem()
         print(' [Done] Generated TSP problems')
 

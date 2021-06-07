@@ -20,11 +20,9 @@ class Instance(object):
         self.available_node = np.arange(1, n_city, dtype=np.int32).tolist()
         self.A = ops.gen_adjacency_matrix(n_city)
         self.x = ops.gen_init_x(n_city)
-        self.cost_func = ops.euclidean_distance
 
         self.current_node = 0
-        self.weight = ops.calculate_weights(self.node_list,
-                                            self.feature)
+        self.weight = ops.calculate_weights(self.feature)
         self.step_count = 0
         self.path = [self.current_node]
 

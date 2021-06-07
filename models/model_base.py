@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import layers, Model, initializers, activations
+from tensorflow.keras import layers, Model, initializers
 
 
 class Structure2Vec(Model):

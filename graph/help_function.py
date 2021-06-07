@@ -5,14 +5,12 @@ class HelpFunction():
 
     def __init__(self, config):
         self.config = config
-        self.weight= None
+        self.weights = None
 
-        self.vec_calculate_dist = np.vectorize(self._calculate_distance,
-                                               excluded=['candidate'],
-                                               otypes=[object])
+    def set_weights(self, weights):
+        self.weights = weights
 
-    def get_insert_pos(self, path, new_node, weight):
-        self.weight = weight
+    def get_insert_pos(self, path, new_node):
         length = len(path) + 1
         candidate = self._generate_candidate(path, new_node, length)
         dist = self._calculate_cost_on_path(candidate, length)
@@ -22,18 +20,25 @@ class HelpFunction():
 
     def _generate_candidate(self, path, new_node, length):
         candidate = np.eye(length, dtype=np.int) * new_node
-        index = np.where(candidate == 0)
-        p = np.array(path * length, dtype=np.int)
-        candidate[index] = p
+        p = (np.asarray(path, dtype=int)[np.newaxis, ...] * np.ones((length, 1), dtype=np.int)).flatten()
+        indice = self.__indices_without_diag(length)
+        candidate[indice] = p
 
         return candidate
+    
+    def __indices_without_diag(self, length):
+        d0 = (np.arange(length, dtype=np.int)[..., np.newaxis] * np.ones((1, length - 1), dtype=np.int)).flatten()
+        d1 = np.arange(1, length + 1, dtype=np.int)[np.newaxis, ...] * np.ones((length - 1, 1), dtype=np.int)
+        d1 += np.arange(length - 1)[..., np.newaxis]
+        d1 %= length
+        return d0, d1.flatten()
 
     def _calculate_cost_on_path(self, candidate, length):
-        index = np.arange(length - 1)
-        dist = np.array(self.vec_calculate_dist(index=index, candidate=candidate).tolist(), dtype=np.float32)
-        dist = np.sum(dist, axis=0)
+        idx0 = np.arange(length - 1, dtype=np.int)
+        idx1 = idx0 + 1
+        d0 = candidate[:, idx0].flatten()
+        d1 = candidate[:, idx1].flatten()
+        dist = self.weights[d0, d1].reshape(length, length - 1)
+        dist = np.sum(dist, axis=-1)
         
         return dist
-
-    def _calculate_distance(self, index, candidate):
-        return self.weight[candidate[:, index], candidate[:, index + 1]].tolist()
