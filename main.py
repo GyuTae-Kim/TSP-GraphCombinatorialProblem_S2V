@@ -20,6 +20,11 @@ def compute_config(config, args):
     config['model_params']['p'] = len(keys)
     config['test_params']['save_test_log'] = False
     config['test_params']['test_path'] = None
+    min_city = config['data_params']['min_city']
+    max_city = config['data_params']['max_city']
+    n_step = config['train_params']['n_step']
+    max_ep = config['train_params']['max_episode']
+    config['model_params']['decay_steps'] = (min_city + max_city - (n_step * 2)) * max_ep
 
     if not os.path.exists('results'):
         os.mkdir('results')

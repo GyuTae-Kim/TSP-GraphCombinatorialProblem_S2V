@@ -17,8 +17,11 @@ class ModelOnGraph(Model):
         self.load = config['model_params']['load']
         self.t = config['model_params']['t']
         self.p = config['model_params']['p']
-        self.lr = config['model_params']['lr']
+        self.init_lr = config['model_params']['init_lr']
         self.save_path = config['train_params']['save_path']
+        self.decay_steps = config['model_params']['decay_steps']
+        self.decay_rate = config['model_params']['decay_rate']
+        self.grad_clip = config['model_params']['grad_clip']
         
         self.G, self.node_list, self.adj, self.feature = None, None, None, None
 
@@ -28,7 +31,13 @@ class ModelOnGraph(Model):
         print(' [Task] Load Evaluation(Q)')
         self.ev = Evaluation(self.p)
         print(' [Done] Successfully Loadded Evaluation(Q)')
-        self.opt = optimizers.Adam(self.lr)
+        self.global_step = tf.Variable(0, trainable=False)
+        lr_decay = tf.compat.v1.train.exponential_decay(self.init_lr,
+                                                        self.global_step,
+                                                        self.decay_steps,
+                                                        self.decay_rate,
+                                                        staircase=True)
+        self.opt = tf.compat.v1.train.AdamOptimizer(lr_decay)
 
         if self.load:
             print(' [Task] Check Checkpoint')
@@ -91,8 +100,11 @@ class ModelOnGraph(Model):
         with tf.GradientTape() as tape:
             Q = self.__call__(idx, x, mu, weight, adj)
             loss = tf.keras.losses.mean_squared_error(opt_Q, Q)
-        grads = tape.gradient(loss, self.trainable_weights)
-        self.opt.apply_gradients(zip(grads, self.trainable_weights))
+        tvars = self.trainable_variables
+        grads = tape.gradient(loss, tvars)
+        grads, _ = tf.clip_by_global_norm(grads, 5)
+        self.opt.apply_gradients(zip(grads, tvars), self.global_step)
+        self.global_step.assign_add(1)
 
         return loss
 

@@ -13,7 +13,7 @@ train_params:
   max_episode: 10000
   test_while_training: True   # Required Test Data
   test_freq: 100              # If test_while_training is True
-  n_step: 24    # (Recommended Value) => min_city // 2 - 1
+  n_step: 14    # (Recommended Value) => min_city // 2 - 1
   train_epoch: 1
   discount: 0.9
   save_path: 'models/logs'
@@ -27,4 +27,6 @@ model_params:
   model: 'S2V'
   load: True
   t: 4
-  lr: 0.00001
+  init_lr: 0.001
+  decay_rate: 0.96
+  grad_clip: 5
