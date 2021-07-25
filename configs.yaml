@@ -6,6 +6,8 @@ data_params:
   max_city: 400
   normalize: True
   use_help_func: True
+  node_feat_size: 6
+  edge_feat_size: 4
 
 train_params:
   batch_size: 5

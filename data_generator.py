@@ -13,6 +13,8 @@ class DataGenerator(Sequence):
         self.feature_keys = config['data_params']['key']
         self.length = config['train_params']['max_episode'] +\
                       config['test_params']['max_episode']
+        self.node_feat_size = config['data_params']['node_feat_size']
+        self.edge_feat_size = config['data_params']['edge_feat_size']
 
         print(' [Task] Produces problem distribution')
         city_info = data_loader.get_city_info()
@@ -28,6 +30,6 @@ class DataGenerator(Sequence):
         n_city = len(problem_idx)
         feature = self.feature[problem_idx]
 
-        G = Instance(n_city, feature)
+        G = Instance(n_city, feature, self.node_feat_size, self.edge_feat_size)
 
         return G

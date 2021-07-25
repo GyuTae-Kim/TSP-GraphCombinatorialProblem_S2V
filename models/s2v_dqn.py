@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import Model, optimizers
+from tensorflow.keras import Model
 
 import os
 
@@ -7,10 +7,10 @@ from .model_base import Structure2Vec, Evaluation
 from . import ops
 
 
-class ModelOnGraph(Model):
+class S2V_DQN(Model):
     
     def __init__(self, config):
-        super(ModelOnGraph, self).__init__()
+        super(S2V_DQN, self).__init__()
 
         self.config = config
 
@@ -22,11 +22,13 @@ class ModelOnGraph(Model):
         self.decay_steps = config['model_params']['decay_steps']
         self.decay_rate = config['model_params']['decay_rate']
         self.grad_clip = config['model_params']['grad_clip']
+        self.node_feat_size = config['data_params']['node_feat_size']
+        self.edge_feat_size = config['data_params']['edge_feat_size']
         
-        self.G, self.node_list, self.adj, self.feature = None, None, None, None
+        self.G, self.node_list, self.adj = None, None, None
 
         print(' [Task] Load S2V')
-        self.s2v = Structure2Vec(self.p)
+        self.s2v = Structure2Vec(self.p, self.node_feat_size, self.edge_feat_size)
         print(' [Done] Successfully Loaded S2V')
         print(' [Task] Load Evaluation(Q)')
         self.ev = Evaluation(self.p)
@@ -45,7 +47,7 @@ class ModelOnGraph(Model):
             print(' [Done] Checking')
     
     def name(self):
-        return 'ModelOnGraph(S2V)'
+        return 'S2V-DQN'
 
     def import_instance(self, G):
         if G is None:
@@ -55,29 +57,22 @@ class ModelOnGraph(Model):
         instance = G.instance_info()
         self.node_list = instance['node_list']
         self.adj = instance['adj']
-        self.feature = self.G.get_feature()
 
-    def embedding(self, x=None, mu=None, w=None, adj=None):
-        if x is None:
-            x = self.G.get_x()
+    def embedding(self, node_feat=None, edge_feat=None, adj=None):
+        if node_feat is None:
+            node_feat = self.G.get_nodefeat()
         if adj is None:
             adj = self.adj
-        if w is None:
-            w = self.G.get_weight()
-        if mu is None:
-            mu = self.feature
+        if edge_feat is None:
+            edge_feat = self.G.get_edgefeat()
 
-        x = tf.convert_to_tensor(x,
-                                 dtype=tf.float32)
-        adj = tf.convert_to_tensor(adj,
-                                   dtype=tf.float32)
-        w = tf.convert_to_tensor(w,
-                                 dtype=tf.float32)
-        mu = tf.convert_to_tensor(mu,
-                                  dtype=tf.float32)
+        node_feat = tf.convert_to_tensor(node_feat, dtype=tf.float32)
+        adj = tf.convert_to_tensor(adj, dtype=tf.float32)
+        edge_feat = tf.convert_to_tensor(edge_feat, dtype=tf.float32)
+        mu = tf.zeros((node_feat.shape[0], self.p), dtype=tf.float32)
 
-        for t in range(self.t):
-            mu = self.s2v(x, mu, w, adj)
+        for _ in range(self.t):
+            mu = self.s2v(node_feat, mu, edge_feat, adj)
 
         return mu
 
@@ -90,15 +85,15 @@ class ModelOnGraph(Model):
 
         return Q
 
-    def call(self, idx, x, mu, w, adj):
-        emb_mu = self.embedding(x, mu, w, adj)
-        Q = self.evaluate(idx, emb_mu)
+    def call(self, idx, node_feat, edge_feat, adj):
+        mu = self.embedding(node_feat, edge_feat, adj)
+        Q = self.evaluate(idx, mu)
 
         return Q
 
-    def update(self, idx, x, mu, weight, adj, opt_Q):
+    def update(self, idx, node_feat, edge_feat, adj, opt_Q):
         with tf.GradientTape() as tape:
-            Q = self.__call__(idx, x, mu, weight, adj)
+            Q = self.__call__(idx, node_feat, edge_feat, adj)
             loss = tf.keras.losses.mean_squared_error(opt_Q, Q)
         tvars = self.trainable_variables
         grads = tape.gradient(loss, tvars)

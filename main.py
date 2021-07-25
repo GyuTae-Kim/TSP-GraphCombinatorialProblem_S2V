@@ -90,10 +90,10 @@ if __name__ == "__main__":
     graph_handler = GraphHandler(config, data_gen, mem)
     print('[Done] Loaded Graph Handler')
     print('[Task] Build Model')
-    model_on_graph = create_model(config)
+    s2v_dqn = create_model(config)
     print('[Done] Built Model')
     print('[Task] Load Agent')
-    agent = Agent(config, graph_handler, model_on_graph)
+    agent = Agent(config, graph_handler, s2v_dqn)
     if not args.test_only and config['train_params']['test_while_training']:
         test_data_gen = DataGenerator(config, data_loader)
         data_genenrator_from_data(test_data_gen, args, config)

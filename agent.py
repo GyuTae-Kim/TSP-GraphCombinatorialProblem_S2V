@@ -12,10 +12,10 @@ from graph_handler import GraphHandler
 
 class Agent(object):
 
-    def __init__(self, config, graph_handler, model_on_graph):
+    def __init__(self, config, graph_handler, s2v_dqn):
         self.config = config
         self.graph_handler = graph_handler
-        self.model_on_graph = model_on_graph
+        self.s2v_dqn = s2v_dqn
         self.test_data_gen = None
 
         self.batch_size = config['train_params']['batch_size']
@@ -49,7 +49,7 @@ class Agent(object):
         print('[Task] Start Train')
         for ep in range(self.train_eps):
             G = self.graph_handler.generate_graph_instance()
-            self.model_on_graph.import_instance(G)
+            self.s2v_dqn.import_instance(G)
             e = 1. / ((ep / 10) + 1)
             done = False
             step = 0
@@ -78,7 +78,7 @@ class Agent(object):
                 ep_avg_loss = None
             print(' [Train] Ep: {}/{} Step: {} Cost: {} Loss: {}'.format(ep,
                                                                          self.train_eps,
-                                                                         self.graph_handler.cur_step,
+                                                                         step,
                                                                          self.graph_handler.bef_cost,
                                                                          ep_avg_loss))
 
@@ -104,7 +104,7 @@ class Agent(object):
 
         for e in range(self.test_eps):
             G = self.graph_handler.generate_graph_instance()
-            self.model_on_graph.import_instance(G)
+            self.s2v_dqn.import_instance(G)
             done = False
             n_visit = 1
 
@@ -139,8 +139,8 @@ class Agent(object):
         self.graph_handler = temp
 
     def get_Q_value(self, moveable_node):
-        mu = self.model_on_graph.embedding()
-        Q = self.model_on_graph.evaluate(moveable_node, mu).numpy()
+        mu = self.s2v_dqn.embedding()
+        Q = self.s2v_dqn.evaluate(moveable_node, mu).numpy()
 
         return Q
 
@@ -148,23 +148,20 @@ class Agent(object):
         loss = []
 
         for e in range(self.train_epoch):
-            batch_G_idx, batch_S, batch_v, batch_R = self.graph_handler.genenrate_train_sample()
+            batch_G_idx, batch_S, batch_v, batch_R, batch_W = self.graph_handler.genenrate_train_sample()
             
-            for i, S, v, R in zip(batch_G_idx, batch_S, batch_v, batch_R):
+            for i, S, v, R, W in zip(batch_G_idx, batch_S, batch_v, batch_R, batch_W):
                 S, future_S = S[0], S[1]
                 G = self.graph_handler.get_instance(i)
                 A = G.get_adjacency_matrix()
-                F = G.get_feature()
-                W = G.get_weight()
                 R = tf.convert_to_tensor(R, dtype=tf.float32)
 
                 Q = tf.convert_to_tensor([[0.]], dtype=tf.float32)
-                Q += R + self.discount * K.max(self.model_on_graph(ops.calculate_available_node(future_S),
-                                                                   future_S,
-                                                                   F,
-                                                                   W,
-                                                                   A))
-                loss.append(self.model_on_graph.update([v], S, F, W, A, Q))
+                Q += R + self.discount * K.max(self.s2v_dqn(ops.calculate_available_node(future_S),
+                                                            future_S,
+                                                            W,
+                                                            A))
+                loss.append(self.s2v_dqn.update([v], S, W, A, Q))
         
         return np.mean(loss)
     
@@ -172,7 +169,7 @@ class Agent(object):
         self.test_data_gen = data_gen
 
     def save_model_weights(self, ep):
-        self.model_on_graph.save_weights(self.checkpoint_format.format(epoch=ep))
+        self.s2v_dqn.save_weights(self.checkpoint_format.format(epoch=ep))
     
     def save_loss_plt(self):
         plt.plot(self.loss)

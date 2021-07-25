@@ -17,7 +17,6 @@ class GraphHandler(object):
         self.total_eps = self.train_eps + self.test_eps
         
         self.data_idx = -1
-        self.cur_step = 0
         self.bef_cost = 0.
 
         self.G, self.feature, self.weight = None, None, None
@@ -25,16 +24,17 @@ class GraphHandler(object):
         self.saving = True
         self.result_path = None
 
-        self.r = []
         self.S = []
         self.v = []
+        self.r = []
+        self.W = []
 
         if self.use_help_func:
             from graph.help_function import HelpFunction as H
             self.H = H(config)
 
     def move_node(self, a):
-        x = self.G.get_x()
+        x = self.G.get_nodefeat()
         if self.use_help_func:
             idx, cost = self.H.get_insert_pos(self.G.path, a)
             done = self.G.move(a, idx)
@@ -43,15 +43,18 @@ class GraphHandler(object):
         else:
             done = self.G.move(a)
             r = self._calculate_reward_tsp(a)
-        self.cur_step += 1
 
         if self.data_idx < self.train_eps and self.saving:
-            self.r.append(r); self.S.append(x); self.v.append(a)
-            if self.cur_step >= self.n_step:
-                bef_idx = self.cur_step - self.n_step
-                self.mem.append(S=(self.S[bef_idx], x),
-                                v=self.v[bef_idx],
-                                R=np.sum(self.r[bef_idx:self.cur_step], dtype=np.float32))
+            self.S.append(x); self.v.append(a); self.r.append(r); self.W.append(self.G.get_edgefeat())
+            if len(self.r) >= self.n_step:
+                self.mem.append(S=(self.S[0], x),
+                                v=self.v[0],
+                                R=np.sum(self.r, dtype=np.float32),
+                                W=self.W[0])
+                self.S.pop(0)
+                self.v.pop(0)
+                self.r.pop(0)
+                self.W.pop(0)
 
         return done
 
@@ -68,16 +71,15 @@ class GraphHandler(object):
             raise IndexError('  [Err] The maximum index of the data generator has been exceeded.')
         
         self.G = self.data_gen[self.data_idx]
-        self.feature = self.G.get_feature()
+        self.feature = self.G.get_coord()
         self.weight = self.G.get_weight()
-        self.cur_step = 0
         self.bef_cost = 0.
 
         if self.use_help_func:
             self.H.set_weights(self.weight)
 
         if self.data_idx <= self.train_eps:
-            self.r, self.S, self.v = [], [], []
+            self.r, self.S, self.v, self.W = [], [], [], []
             self.mem.set_index(self.data_idx)
 
         return self.G

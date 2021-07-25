@@ -8,10 +8,10 @@ from .test1_model_base import EmbeddingNetwork, EvaluationNetwork
 from . import ops
 
 
-class ModelOnGraph(Model):
+class S2V_DQN(Model):
     
     def __init__(self, config):
-        super(ModelOnGraph, self).__init__()
+        super(S2V_DQN, self).__init__()
 
         self.config = config
 
