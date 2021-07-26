@@ -104,7 +104,7 @@ class Agent(object):
 
         for e in range(self.test_eps):
             G = self.graph_handler.generate_graph_instance()
-            self.model_on_graph.import_instance(G)
+            self.s2v_dqn.import_instance(G)
             done = False
             n_visit = 1
             select = [0]
