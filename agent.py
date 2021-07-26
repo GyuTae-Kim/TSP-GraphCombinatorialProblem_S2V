@@ -135,8 +135,11 @@ class Agent(object):
         test_graph_handler.set_result_path(os.path.join('results', '{}_test.txt'.format(ep)))
         temp = self.graph_handler
         self.graph_handler = test_graph_handler
+        temp_test_eps = self.test_eps
+        self.test_eps = len(self.test_data_gen)
         self.run_test()
         self.graph_handler = temp
+        self.test_eps = temp_test_eps
 
     def get_Q_value(self, moveable_node):
         mu = self.s2v_dqn.embedding()
