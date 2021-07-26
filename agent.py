@@ -104,19 +104,23 @@ class Agent(object):
 
         for e in range(self.test_eps):
             G = self.graph_handler.generate_graph_instance()
-            self.s2v_dqn.import_instance(G)
+            self.model_on_graph.import_instance(G)
             done = False
             n_visit = 1
+            select = [0]
 
             while not done:
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
+                #print(Q)
                 a = moveable_node[np.argmax(Q)]
+                select.append(a)
                 done = self.graph_handler.move_node(a)
                 n_visit += 1
 
             total_cost = self.graph_handler.bef_cost
             cost.append(total_cost)
+            #print(select)
             
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, total_cost))
             
@@ -124,22 +128,29 @@ class Agent(object):
                 with open(self.test_result_path, 'a') as f:
                     data = '{} {}\n'.format(G.n_city, total_cost)
                     f.write(data)
-            elif self.save_test_log and self.test_while_training:
-                with open(self.graph_handler.get_result_path):
-                    data = '{} {}\n'.format(G.n_city, total_cost)
-                    f.write(data)
+        
+        if self.test_while_training and self.config['train_params']['max_episode'] != 0:
+            out = os.path.join('results', 'training_test.txt')
+            if not os.path.exists(out):
+                f = open(out, 'w')
+                f.close()
+            with open(out, 'a') as f:
+                data = '{}\n'.format(np.mean(cost))
+                f.write(data)
     
     def run_test_while_training(self, ep):
         test_graph_handler = GraphHandler(self.config, self.test_data_gen, None)
         test_graph_handler.set_saving_mode(False)
-        test_graph_handler.set_result_path(os.path.join('results', '{}_test.txt'.format(ep)))
-        temp = self.graph_handler
+        test_graph_handler.set_result_path(os.path.join('results', 'test_while_training.txt'.format(ep)))
+        origin_handler = self.graph_handler
+        origin_test_eps = self.test_eps
+        
         self.graph_handler = test_graph_handler
-        temp_test_eps = self.test_eps
         self.test_eps = len(self.test_data_gen)
         self.run_test()
-        self.graph_handler = temp
-        self.test_eps = temp_test_eps
+        
+        self.graph_handler = origin_handler
+        self.test_eps = origin_test_eps
 
     def get_Q_value(self, moveable_node):
         mu = self.s2v_dqn.embedding()
