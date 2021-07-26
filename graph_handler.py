@@ -78,7 +78,7 @@ class GraphHandler(object):
         if self.use_help_func:
             self.H.set_weights(self.weight)
 
-        if self.data_idx <= self.train_eps:
+        if self.data_idx <= self.train_eps and self.saving:
             self.r, self.S, self.v, self.W = [], [], [], []
             self.mem.set_index(self.data_idx)
 
