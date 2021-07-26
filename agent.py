@@ -93,9 +93,11 @@ class Agent(object):
         self.save_model_weights(self.train_eps)
         self.save_loss_plt()
 
-    def run_test(self):
+    def run_test(self, file_name=None):
         print('[Task] Start Test')
         cost = []
+        if file_name is not None:
+            str_Q = ''
 
         if self.save_test_log:
             if not os.path.exists(self.test_result_path):
@@ -107,20 +109,21 @@ class Agent(object):
             self.s2v_dqn.import_instance(G)
             done = False
             n_visit = 1
-            select = [0]
 
             while not done:
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
-                #print(Q)
+                str_Q += str(Q) + '\n'
                 a = moveable_node[np.argmax(Q)]
-                select.append(a)
                 done = self.graph_handler.move_node(a)
                 n_visit += 1
 
             total_cost = self.graph_handler.bef_cost
             cost.append(total_cost)
-            #print(select)
+            if file_name is not None:
+                str_Q += '\n'
+                with open(file_name, 'a') as f:
+                    f.write(str_Q)
             
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, total_cost))
             
@@ -141,13 +144,14 @@ class Agent(object):
     def run_test_while_training(self, ep):
         test_graph_handler = GraphHandler(self.config, self.test_data_gen, None)
         test_graph_handler.set_saving_mode(False)
-        test_graph_handler.set_result_path(os.path.join('results', 'test_while_training.txt'.format(ep)))
+        test_graph_handler.set_result_path(os.path.join('results', 'test_while_training{}.txt'.format(ep)))
         origin_handler = self.graph_handler
+
         origin_test_eps = self.test_eps
         
         self.graph_handler = test_graph_handler
         self.test_eps = len(self.test_data_gen)
-        self.run_test()
+        self.run_test('test.txt')
         
         self.graph_handler = origin_handler
         self.test_eps = origin_test_eps
