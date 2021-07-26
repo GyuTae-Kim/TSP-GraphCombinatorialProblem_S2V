@@ -39,6 +39,7 @@ def data_genenrator_from_data(data_gen, args, config):
     problems_idx, feature = read_files(args.test_data_path)
     data_gen.problems_idx = problems_idx
     data_gen.feature = feature
+    data_gen.length = len(problems_idx)
     if args.test_only:
         config['test_params']['max_episode'] = len(problems_idx)
 
