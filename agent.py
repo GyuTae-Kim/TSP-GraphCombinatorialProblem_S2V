@@ -96,8 +96,6 @@ class Agent(object):
     def run_test(self):
         print('[Task] Start Test')
         cost = []
-        if file_name is not None:
-            str_Q = ''
 
         if self.save_test_log:
             if not os.path.exists(self.test_result_path):
