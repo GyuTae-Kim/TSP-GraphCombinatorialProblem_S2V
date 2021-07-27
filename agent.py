@@ -113,6 +113,7 @@ class Agent(object):
             while not done:
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
+                print(Q)
                 str_Q += str(Q) + '\n'
                 a = moveable_node[np.argmax(Q)]
                 done = self.graph_handler.move_node(a)
@@ -151,7 +152,7 @@ class Agent(object):
         
         self.graph_handler = test_graph_handler
         self.test_eps = len(self.test_data_gen)
-        self.run_test('test.txt')
+        self.run_test()
         
         self.graph_handler = origin_handler
         self.test_eps = origin_test_eps

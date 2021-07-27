@@ -4,7 +4,7 @@ data_params:
   path: 'data/tsp_data.txt'
   min_city: 30
   max_city: 400
-  normalize: True
+  normalize: False
   use_help_func: True
   node_feat_size: 6
   edge_feat_size: 4
@@ -14,7 +14,7 @@ train_params:
   memory_size: 1000
   max_episode: 10000
   test_while_training: True   # Required Test Data
-  test_freq: 100              # If test_while_training is True
+  test_freq: 200              # If test_while_training is True
   n_step: 14    # (Recommended Value) => min_city // 2 - 1
   train_epoch: 1
   discount: 0.9
@@ -27,8 +27,9 @@ test_params:
 
 model_params:
   model: 'S2V'
+  p: 32
   load: True
   t: 4
-  init_lr: 0.001
+  init_lr: 0.01
   decay_rate: 0.96
   grad_clip: 5

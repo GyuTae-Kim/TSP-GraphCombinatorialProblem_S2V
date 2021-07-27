@@ -17,7 +17,6 @@ from utils.memory import Memory as Mem
 
 def compute_config(config, args):
     keys = config['data_params']['key']
-    config['model_params']['p'] = len(keys)
     config['test_params']['save_test_log'] = False
     config['test_params']['test_path'] = None
     min_city = config['data_params']['min_city']
