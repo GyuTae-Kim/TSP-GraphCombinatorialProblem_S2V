@@ -93,7 +93,7 @@ class Agent(object):
         self.save_model_weights(self.train_eps)
         self.save_loss_plt()
 
-    def run_test(self, file_name=None):
+    def run_test(self):
         print('[Task] Start Test')
         cost = []
         if file_name is not None:
@@ -113,18 +113,12 @@ class Agent(object):
             while not done:
                 moveable_node = self.graph_handler.moveable_node()
                 Q = self.get_Q_value(moveable_node)
-                print(Q)
-                str_Q += str(Q) + '\n'
                 a = moveable_node[np.argmax(Q)]
                 done = self.graph_handler.move_node(a)
                 n_visit += 1
 
             total_cost = self.graph_handler.bef_cost
             cost.append(total_cost)
-            if file_name is not None:
-                str_Q += '\n'
-                with open(file_name, 'a') as f:
-                    f.write(str_Q)
             
             print(' [Test] Ep: {}/{}, cost: {}'.format(e, self.test_eps, total_cost))
             
