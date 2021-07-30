@@ -4,7 +4,7 @@ data_params:
   path: 'data/tsp_data.txt'
   min_city: 30
   max_city: 400
-  normalize: False
+  normalize: True
   use_help_func: True
   node_feat_size: 6
   edge_feat_size: 4

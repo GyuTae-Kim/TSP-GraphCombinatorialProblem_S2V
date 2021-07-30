@@ -67,10 +67,13 @@ class DataLoader(object):
         x_val = self.df['x'].to_numpy(dtype=np.float32)
         y_val = self.df['y'].to_numpy(dtype=np.float32)
 
-        max_val = np.max((x_val, y_val))
+        x_max = np.max(x_val)
+        x_min = np.min(x_val)
+        y_max = np.max(y_val)
+        y_min = np.min(y_val)
 
-        x_val = x_val / (max_val / 2.) - 1.
-        y_val = y_val / (max_val / 2.) - 1.
+        x_val = (x_val - x_min) / (x_max - x_min)
+        y_val = (y_val - y_min) / (y_max - y_min)
 
         self.df['x'], self.df['y'] = x_val, y_val
     ##########################################################
